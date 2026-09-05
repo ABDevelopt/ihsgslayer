@@ -28,14 +28,11 @@ def _run_deploy_task():
         lf.write(f"\n\n=== Triggered Deployment at {timestamp} ===\n")
         lf.flush()
 
-        if os.path.exists(script_path):
-            subprocess.Popen(
-                ["bash", script_path],
-                stdout=lf,
-                stderr=subprocess.STDOUT,
-                cwd=app_cwd
-            )
-        else:
+    if os.path.exists(script_path):
+        cmd = f"bash {script_path} >> {log_file} 2>&1"
+        subprocess.Popen(cmd, shell=True, cwd=app_cwd)
+    else:
+        with open(log_file, "a", encoding="utf-8") as lf:
             lf.write(f"Notice: Linux deploy script '{script_path}' not found (running on non-server environment).\n")
 
 
