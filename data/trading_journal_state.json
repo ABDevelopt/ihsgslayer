@@ -1,11 +1,11 @@
 {
-  "initial_cash": 100000000.0,
-  "cash_balance": 19585263.0,
-  "total_equity": 25569563.0,
-  "stock_market_value": 1156300.0,
-  "total_pnl_rp": 1828750.0,
-  "total_pnl_pct": -74.43,
-  "nav_per_unit": 255.7,
+  "initial_cash": 115500000.0,
+  "cash_balance": 11549763.0,
+  "total_equity": 12707763.0,
+  "stock_market_value": 1158000.0,
+  "total_pnl_rp": 3118125.0,
+  "total_pnl_pct": -89.0,
+  "nav_per_unit": 110.02,
   "open_positions": [
     {
       "id": "d90841b6",
@@ -74,6 +74,36 @@
     }
   ],
   "closed_positions": [
+    {
+      "id": "f6fe1c6f",
+      "symbol": "ASII.JK",
+      "name": "Astra International Tbk",
+      "sector": "Consumer Cyclicals",
+      "entry_price": 5000.0,
+      "exit_price": 5200.0,
+      "shares_lot": 10,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 179500.0,
+      "realized_pnl_pct": 3.58,
+      "notes": "Partial profit take"
+    },
+    {
+      "id": "35d552ab",
+      "symbol": "ASII.JK",
+      "name": "Astra International Tbk",
+      "sector": "Consumer Cyclicals",
+      "entry_price": 5000.0,
+      "exit_price": 5200.0,
+      "shares_lot": 10,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 179500.0,
+      "realized_pnl_pct": 3.58,
+      "notes": "Partial profit take"
+    },
     {
       "id": "d82a598c",
       "symbol": "ASII.JK",
@@ -290,6 +320,45 @@
     },
     {
       "id": "5fd61042",
+      "symbol": "BBCA.JK",
+      "entry_price": 9500.0,
+      "exit_price": 9800.0,
+      "shares_lot": 5,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 130625.0,
+      "realized_pnl_pct": 2.75,
+      "notes": "Manual Exit"
+    },
+    {
+      "id": "031d93b8",
+      "symbol": "BBCA.JK",
+      "entry_price": 9500.0,
+      "exit_price": 9800.0,
+      "shares_lot": 5,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 130625.0,
+      "realized_pnl_pct": 2.75,
+      "notes": "Manual Exit"
+    },
+    {
+      "id": "8c1a2182",
+      "symbol": "BBCA.JK",
+      "entry_price": 9500.0,
+      "exit_price": 9800.0,
+      "shares_lot": 5,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 130625.0,
+      "realized_pnl_pct": 2.75,
+      "notes": "Manual Exit"
+    },
+    {
+      "id": "ca2f5aca",
       "symbol": "BBCA.JK",
       "entry_price": 9500.0,
       "exit_price": 9800.0,

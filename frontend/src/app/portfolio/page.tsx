@@ -49,7 +49,14 @@ import {
   History,
   LayoutDashboard,
   ShieldAlert,
-  Percent
+  Percent,
+  Compass,
+  Calculator,
+  Flame,
+  Award,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Receipt
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ShariaBadge } from "@/components/ShariaBadge";
@@ -89,14 +96,35 @@ interface HoldingItem {
   };
   bandarmologi: {
     status: string;
+    grade?: string;
+    cr3_pct?: number;
+    cr5_pct?: number;
+    bandar_vwap?: number;
+    distance_to_bandar_pct?: number;
+    is_golden_entry?: boolean;
     volume_ratio: number;
     foreign_flow: string;
+    top_buyers?: string[];
     is_accumulating: boolean;
+    summary_desc?: string;
   };
   ai_score: {
     score: number;
     safety_badge: string;
     is_gorengan: boolean;
+  };
+  odds_maker?: {
+    win_probability_pct: number;
+    loss_probability_pct: number;
+    expected_value_pct: number;
+    risk_reward_ratio: string;
+    risk_reward_num: number;
+    half_kelly_max_allocation_pct: number;
+    odds_grade: string;
+    grade_color: string;
+    assessment: string;
+    tested_regime: string;
+    is_golden_entry_applied: boolean;
   };
   recommendation: {
     action: string;
@@ -113,7 +141,7 @@ export default function PortfolioPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [viewTab, setViewTab] = useState<"dashboard" | "holdings" | "history">("dashboard");
+  const [viewTab, setViewTab] = useState<"dashboard" | "holdings" | "history" | "cashflows">("dashboard");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [recFilter, setRecFilter] = useState<string>("ALL");
   const [sectorFilter, setSectorFilter] = useState<string>("ALL");
@@ -122,7 +150,19 @@ export default function PortfolioPage() {
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
   const [isSellOpen, setIsSellOpen] = useState<boolean>(false);
+  const [isTopUpOpen, setIsTopUpOpen] = useState<boolean>(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
   const [selectedHolding, setSelectedHolding] = useState<HoldingItem | null>(null);
+
+  // Top-Up form
+  const [topUpAmount, setTopUpAmount] = useState<string>("5000000");
+  const [topUpNotes, setTopUpNotes] = useState<string>("Setor Kas RDN via BCA");
+  const [submittingTopUp, setSubmittingTopUp] = useState<boolean>(false);
+
+  // Withdraw form
+  const [withdrawAmount, setWithdrawAmount] = useState<string>("1000000");
+  const [withdrawNotes, setWithdrawNotes] = useState<string>("Tarik Saldo ke Rekening Pribadi");
+  const [submittingWithdraw, setSubmittingWithdraw] = useState<boolean>(false);
 
   // Add form state
   const [formSymbol, setFormSymbol] = useState<string>("");
@@ -132,6 +172,8 @@ export default function PortfolioPage() {
   const [formSl, setFormSl] = useState<string>("");
   const [formNotes, setFormNotes] = useState<string>("");
   const [submittingAdd, setSubmittingAdd] = useState<boolean>(false);
+  const [calculatingRiskParity, setCalculatingRiskParity] = useState<boolean>(false);
+  const [riskParityInfo, setRiskParityInfo] = useState<any>(null);
 
   // Sell form state
   const [sellLot, setSellLot] = useState<number>(1);
@@ -167,9 +209,11 @@ export default function PortfolioPage() {
   const summary = data?.summary || {};
   const holdings: HoldingItem[] = data?.holdings || [];
   const closedTrades: any[] = data?.closed_trades || [];
+  const cashFlows: any[] = data?.cash_flows || [];
   const recSummary = data?.recommendation_summary || {};
   const sectorAlloc: any[] = data?.sector_allocation || [];
   const equityHistory: any[] = data?.equity_history || [];
+  const marketRegime = data?.market_regime || null;
 
   // Filtered holdings for the list tab
   const filteredHoldings = useMemo(() => {
@@ -190,6 +234,8 @@ export default function PortfolioPage() {
         matchRec = h.recommendation.action === "ADD_LOT";
       } else if (recFilter === "CUT_LOSS") {
         matchRec = h.recommendation.action === "CUT_LOSS" || h.recommendation.action === "REDUCE";
+      } else if (recFilter === "GOLDEN") {
+        matchRec = h.bandarmologi.is_golden_entry === true;
       }
 
       return matchSearch && matchSector && matchRec;
@@ -205,7 +251,6 @@ export default function PortfolioPage() {
         { name: "Saham Terbuka", value: summary.total_market_value || 0, color: "#6366f1" }
       ];
     }
-    // Stock-by-stock breakdown + remaining cash
     const items = holdings.map((h, i) => ({
       name: h.symbol.replace(".JK", ""),
       value: h.market_value,
@@ -257,6 +302,80 @@ export default function PortfolioPage() {
     };
   }, [closedTrades]);
 
+  // Handle Top-Up Submit
+  const handleTopUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(topUpAmount);
+    if (!amt || amt <= 0) {
+      showToast("Masukkan nominal top-up yang valid", "error");
+      return;
+    }
+    setSubmittingTopUp(true);
+    try {
+      const res = await api.topUpPortfolioCash(amt, topUpNotes);
+      showToast(res.message || "Top-up kas RDN berhasil", "success");
+      setIsTopUpOpen(false);
+      fetchPortfolio(true);
+    } catch (err: any) {
+      showToast(err.message || "Gagal melakukan top-up", "error");
+    } finally {
+      setSubmittingTopUp(false);
+    }
+  };
+
+  // Handle Withdraw Submit
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(withdrawAmount);
+    if (!amt || amt <= 0) {
+      showToast("Masukkan nominal penarikan yang valid", "error");
+      return;
+    }
+    if (amt > (summary.cash_balance || 0)) {
+      showToast("Nominal penarikan melebihi saldo kas RDN yang tersedia", "error");
+      return;
+    }
+    setSubmittingWithdraw(true);
+    try {
+      const res = await api.withdrawPortfolioCash(amt, withdrawNotes);
+      showToast(res.message || "Penarikan kas RDN berhasil", "success");
+      setIsWithdrawOpen(false);
+      fetchPortfolio(true);
+    } catch (err: any) {
+      showToast(err.message || "Gagal melakukan penarikan", "error");
+    } finally {
+      setSubmittingWithdraw(false);
+    }
+  };
+
+  // Calculate Risk Parity Lot
+  const handleCalculateRiskParity = async () => {
+    const price = parseFloat(formPrice);
+    let sl = parseFloat(formSl);
+    if (!price || price <= 0) {
+      showToast("Masukkan harga beli terlebih dahulu", "error");
+      return;
+    }
+    if (!sl || sl <= 0) {
+      sl = Math.round(price * 0.95);
+      setFormSl(String(sl));
+    }
+    setCalculatingRiskParity(true);
+    try {
+      const res = await api.getRiskParitySizing(price, sl, 1.0);
+      if (res && res.status === "success" && res.data) {
+        const sizing = res.data;
+        setFormLot(String(sizing.recommended_lots));
+        setRiskParityInfo(sizing);
+        showToast(`Ukuran lot optimal berbasis risiko 1% NAV dihitung: ${sizing.recommended_lots} lot`, "success");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Gagal menghitung lot sizing", "error");
+    } finally {
+      setCalculatingRiskParity(false);
+    }
+  };
+
   // Handle Add Submit
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,6 +401,7 @@ export default function PortfolioPage() {
       setFormTp1("");
       setFormSl("");
       setFormNotes("");
+      setRiskParityInfo(null);
       fetchPortfolio(true);
     } catch (err: any) {
       showToast(err.message || "Gagal menambahkan posisi", "error");
@@ -361,10 +481,10 @@ export default function PortfolioPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              AI QUANTITATIVE PORTFOLIO
+              QUANTITATIVE PORTFOLIO v3.0
             </span>
             <span className="text-xs text-slate-400 font-mono">
-              Integrasi Data Jurnal Riil & Evaluasi Multi-Pilar Terkini
+              Top-Up & Tarik Saldo · Deep Bandarmologi · Odds Maker
             </span>
           </div>
           <h3 className="font-bold text-xl sm:text-2xl text-slate-100 flex items-center gap-2 mt-1.5">
@@ -372,14 +492,31 @@ export default function PortfolioPage() {
             <span>Dasbor Portofolio Saham & AI Advisor</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-3xl leading-relaxed">
-            Dasbor portofolio interaktif berbasis data riil. Memantau valuasi ekuitas, visualisasi alokasi kas vs saham,
-            kinerja PnL per emiten, serta panduan harian 4 pilar: <strong className="text-emerald-300">Take Profit</strong>,{" "}
-            <strong className="text-blue-300">Hold</strong>, <strong className="text-cyan-300">Tambah Lot</strong>, atau{" "}
-            <strong className="text-rose-300">Cut Loss</strong>.
+            Kelola modal kas RDN secara fleksibel (Top-Up / Tarik Dana), pantau valuasi ekuitas riil, 
+            dan eksekusi keputusan harian berbasis estimasi <strong>Bandar VWAP</strong>, <strong>Pre-Trade Odds (+EV)</strong>, 
+            serta <strong>Rezim Pasar IHSG</strong>.
           </p>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          <button
+            onClick={() => setIsTopUpOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all"
+            title="Setor / Tambah Kas RDN"
+          >
+            <ArrowDownCircle className="w-4 h-4 text-emerald-400" />
+            <span>Top-Up Modal</span>
+          </button>
+
+          <button
+            onClick={() => setIsWithdrawOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-all"
+            title="Tarik Saldo Kas RDN"
+          >
+            <ArrowUpCircle className="w-4 h-4 text-amber-400" />
+            <span>Tarik Modal</span>
+          </button>
+
           <button
             onClick={() => fetchPortfolio(true)}
             disabled={refreshing || loading}
@@ -387,15 +524,7 @@ export default function PortfolioPage() {
             title="Refresh evaluasi terkini"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-emerald-400" : ""}`} />
-            <span>{refreshing ? "Menganalisis..." : "Refresh Data"}</span>
-          </button>
-
-          <button
-            onClick={handleResetDemo}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-400 hover:text-slate-200 text-xs font-mono transition-all"
-            title="Reset acuan portofolio ke contoh awal"
-          >
-            Reset Contoh
+            <span>{refreshing ? "Menganalisis..." : "Refresh"}</span>
           </button>
 
           <button
@@ -407,6 +536,47 @@ export default function PortfolioPage() {
           </button>
         </div>
       </div>
+
+      {/* MARKET REGIME ADAPTIVE BANNER */}
+      {marketRegime && (
+        <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+          marketRegime.badge_color === "emerald"
+            ? "bg-emerald-950/25 border-emerald-500/40 text-emerald-200"
+            : marketRegime.badge_color === "amber"
+            ? "bg-amber-950/25 border-amber-500/40 text-amber-200"
+            : "bg-rose-950/25 border-rose-500/40 text-rose-200"
+        }`}>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-black/40 shrink-0 mt-0.5">
+              <Compass className={`w-5 h-5 ${
+                marketRegime.badge_color === "emerald" ? "text-emerald-400" : marketRegime.badge_color === "amber" ? "text-amber-400" : "text-rose-400"
+              }`} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono font-bold text-xs uppercase px-2 py-0.5 rounded bg-black/40 border border-white/10">
+                  REZIM IHSG: {marketRegime.regime}
+                </span>
+                <span className="text-[10px] font-mono opacity-80">
+                  Keyakinan: <strong>{marketRegime.confidence_pct}%</strong> · IHSG: <strong>{marketRegime.ihsg_metrics?.price?.toLocaleString("id-ID")}</strong>
+                </span>
+              </div>
+              <p className="text-xs mt-1 leading-relaxed opacity-90 max-w-2xl">{marketRegime.description}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs font-mono shrink-0 bg-black/30 p-2.5 rounded-xl border border-white/10">
+            <div>
+              <span className="text-[10px] text-slate-400 block">Alokasi Ideal:</span>
+              <span className="font-bold">Kas {marketRegime.recommended_cash_pct}% · Saham {marketRegime.recommended_stock_pct}%</span>
+            </div>
+            <div className="pl-3 border-l border-white/15">
+              <span className="text-[10px] text-slate-400 block">Fokus Strategi:</span>
+              <span className="font-bold text-emerald-300">{marketRegime.primary_strategies?.slice(0, 2).join(", ")}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 4 KPI Top Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -420,7 +590,7 @@ export default function PortfolioPage() {
             {formatRupiah(summary.total_nav || 0)}
           </div>
           <div className="text-[11px] text-slate-500 font-mono flex items-center justify-between">
-            <span>Kas: {formatRupiah(summary.cash_balance || 0)} ({summary.cash_ratio_pct || 0}%)</span>
+            <span>Kas RDN: <strong className="text-emerald-400">{formatRupiah(summary.cash_balance || 0)}</strong> ({summary.cash_ratio_pct || 0}%)</span>
             <span>Saham: {summary.stock_ratio_pct || 0}%</span>
           </div>
         </div>
@@ -499,7 +669,7 @@ export default function PortfolioPage() {
 
       {/* Main View Mode Selector */}
       <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3 flex-wrap">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setViewTab("dashboard")}
             className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all ${
@@ -521,7 +691,7 @@ export default function PortfolioPage() {
             }`}
           >
             <ListFilter className="w-4 h-4" />
-            <span>Daftar Posisi & Analisis 4-Pilar ({holdings.length})</span>
+            <span>Daftar Posisi ({holdings.length})</span>
           </button>
 
           <button
@@ -533,7 +703,19 @@ export default function PortfolioPage() {
             }`}
           >
             <History className="w-4 h-4" />
-            <span>Riwayat Realisasi Trade ({closedTrades.length})</span>
+            <span>Riwayat Trade Closed ({closedTrades.length})</span>
+          </button>
+
+          <button
+            onClick={() => setViewTab("cashflows")}
+            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all ${
+              viewTab === "cashflows"
+                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-lg shadow-emerald-500/10"
+                : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+            }`}
+          >
+            <Receipt className="w-4 h-4 text-emerald-400" />
+            <span>Mutasi Modal RDN ({cashFlows.length})</span>
           </button>
         </div>
 
@@ -698,7 +880,7 @@ export default function PortfolioPage() {
                   <span>Kurva Pertumbuhan Ekuitas & NAV Portofolio</span>
                 </h4>
                 <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                  Progres akumulasi modal dari modal awal Rp 100.000.000 hingga valuasi saat ini
+                  Progres akumulasi modal dari modal awal hingga valuasi saat ini
                 </p>
               </div>
               <div className="flex items-center gap-2 text-xs font-mono">
@@ -845,7 +1027,7 @@ export default function PortfolioPage() {
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-400 shrink-0" />
               <span className="text-xs font-mono text-slate-300 font-bold">
-                Filter Rekomendasi Hari Ini:
+                Filter Rekomendasi:
               </span>
             </div>
 
@@ -859,6 +1041,18 @@ export default function PortfolioPage() {
                 }`}
               >
                 Semua ({holdings.length})
+              </button>
+
+              <button
+                onClick={() => setRecFilter("GOLDEN")}
+                className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                  recFilter === "GOLDEN"
+                    ? "bg-amber-500/30 text-amber-300 border border-amber-500/50"
+                    : "bg-slate-900 text-amber-400 hover:bg-slate-800 border border-slate-800"
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 text-amber-400" />
+                <span>Golden Entry ({holdings.filter((h) => h.bandarmologi?.is_golden_entry).length})</span>
               </button>
 
               <button
@@ -947,7 +1141,7 @@ export default function PortfolioPage() {
           {loading ? (
             <div className="p-12 text-center text-slate-500 font-mono text-xs flex flex-col items-center gap-3">
               <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
-              <span>Memproses evaluasi multi-analisis 4 pilar saham...</span>
+              <span>Memproses evaluasi multi-analisis 4 pilar kuantitatif...</span>
             </div>
           ) : filteredHoldings.length === 0 ? (
             <div className="p-12 text-center bg-cardBg rounded-2xl border border-slate-800 space-y-3">
@@ -968,6 +1162,7 @@ export default function PortfolioPage() {
                 const tech = h.technical_indicators;
                 const bandar = h.bandarmologi;
                 const ai = h.ai_score;
+                const odds = h.odds_maker;
 
                 const isProfit = h.floating_pnl_rp >= 0;
 
@@ -983,11 +1178,17 @@ export default function PortfolioPage() {
                           {h.symbol.replace(".JK", "").slice(0, 4)}
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-base text-slate-100 font-mono">
                               {h.symbol.replace(".JK", "")}
                             </span>
                             {h.is_sharia && <ShariaBadge isSharia={true} />}
+                            {bandar.is_golden_entry && (
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 animate-pulse">
+                                <Flame className="w-3 h-3 text-amber-400" />
+                                <span>GOLDEN ENTRY (MODAL BANDAR)</span>
+                              </span>
+                            )}
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">
                               {h.sector}
                             </span>
@@ -1066,6 +1267,11 @@ export default function PortfolioPage() {
                             <span className="text-[10px] font-mono opacity-80">
                               Urgensi: <strong>{rec.urgency}</strong>
                             </span>
+                            {odds && (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/40 text-emerald-300 border border-emerald-500/30">
+                                Odds: <strong>{odds.win_probability_pct}% Win</strong> · EV: <strong>+{odds.expected_value_pct}%</strong>
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs leading-relaxed opacity-90 mt-1">{rec.rationale}</p>
                         </div>
@@ -1125,63 +1331,61 @@ export default function PortfolioPage() {
                         </div>
                       </div>
 
-                      {/* 2. Bandarmologi & Flow */}
+                      {/* 2. Deep Bandarmologi */}
                       <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-1.5">
                         <div className="text-[11px] text-slate-400 font-bold flex items-center justify-between">
-                          <span>2. BANDARMOLOGI</span>
+                          <span>2. DEEP BANDARMOLOGI</span>
                           <Activity className="w-3.5 h-3.5 text-cyan-400" />
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Status Akum:</span>
-                          <span
-                            className={`font-bold ${
-                              bandar.is_accumulating ? "text-emerald-400" : "text-amber-400"
-                            }`}
-                          >
-                            {bandar.status}
+                          <span className="text-slate-500">Bandar VWAP:</span>
+                          <span className="font-bold text-emerald-400">
+                            {bandar.bandar_vwap ? formatRupiah(bandar.bandar_vwap) : "-"}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Rasio Volume:</span>
-                          <span className="text-slate-200 font-bold">{bandar.volume_ratio}x</span>
+                          <span className="text-slate-500">Konsentrasi CR3:</span>
+                          <span className="text-slate-200 font-bold">{bandar.cr3_pct || 50}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Foreign Flow:</span>
-                          <span className="text-slate-300">{bandar.foreign_flow}</span>
+                          <span className="text-slate-500">Jarak Modal Bandar:</span>
+                          <span className={`font-bold ${(bandar.distance_to_bandar_pct || 0) <= 2.5 ? "text-emerald-300" : "text-amber-300"}`}>
+                            {(bandar.distance_to_bandar_pct || 0) > 0 ? `+${bandar.distance_to_bandar_pct}%` : `${bandar.distance_to_bandar_pct}%`}
+                          </span>
                         </div>
-                        <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                          <span>Institusi dominan dalam 5 hari</span>
+                        <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60 truncate">
+                          <span>Top Buyers: {bandar.top_buyers?.join(", ") || "Institusi"}</span>
                         </div>
                       </div>
 
-                      {/* 3. AI Score & Shield */}
+                      {/* 3. Odds Maker & AI Score */}
                       <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-1.5">
                         <div className="text-[11px] text-slate-400 font-bold flex items-center justify-between">
-                          <span>3. AI SCORE & SHIELD</span>
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>3. PRE-TRADE ODDS & AI</span>
+                          <Award className="w-3.5 h-3.5 text-amber-400" />
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Skor AI:</span>
-                          <span className="font-bold text-emerald-400 text-sm">
-                            {ai.score} / 100
+                          <span className="text-slate-500">Win Probability:</span>
+                          <span className="font-bold text-emerald-400">
+                            {odds?.win_probability_pct || 70}%
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Proteksi Fraud:</span>
-                          <span className="font-bold text-slate-300">{ai.safety_badge}</span>
+                          <span className="text-slate-500">Expected Value (EV):</span>
+                          <span className="font-bold text-cyan-300">
+                            +{odds?.expected_value_pct || 3.0}%
+                          </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Gorengan:</span>
-                          <span className={ai.is_gorengan ? "text-rose-400 font-bold" : "text-emerald-400"}>
-                            {ai.is_gorengan ? "WASPADA TINGGI" : "AMAN (BLUECHIP/SOLID)"}
-                          </span>
+                          <span className="text-slate-500">Skor AI Kuantitatif:</span>
+                          <span className="font-bold text-slate-200">{ai.score} / 100</span>
                         </div>
                         <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
-                          <span>Audit anomali orderbook lolos</span>
+                          <span>Grade: <strong className="text-emerald-300">{odds?.odds_grade || "STRONG_EDGE"}</strong></span>
                         </div>
                       </div>
 
-                      {/* 4. Target & Risiko Proximity */}
+                      {/* 4. Target & Cut Loss */}
                       <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-1.5">
                         <div className="text-[11px] text-slate-400 font-bold flex items-center justify-between">
                           <span>4. TARGET & CUT LOSS</span>
@@ -1295,7 +1499,290 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* MODAL: TAMBAH SAHAM */}
+      {/* TAB 4: MUTASI ARUS KAS RDN (TOP-UP & TARIK SALDO) */}
+      {viewTab === "cashflows" && (
+        <div className="p-5 rounded-2xl bg-cardBg border border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <h4 className="font-mono font-bold text-sm text-slate-200 flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-emerald-400" />
+                <span>Riwayat Mutasi Modal Kas RDN (Stockbit-Style)</span>
+              </h4>
+              <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                Catatan setoran modal (Top-Up) dan penarikan saldo kas akun Anda
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsTopUpOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
+              >
+                <ArrowDownCircle className="w-4 h-4" />
+                <span>+ Top-Up Modal</span>
+              </button>
+              <button
+                onClick={() => setIsWithdrawOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all"
+              >
+                <ArrowUpCircle className="w-4 h-4 text-amber-400" />
+                <span>- Tarik Saldo</span>
+              </button>
+            </div>
+          </div>
+
+          {cashFlows.length === 0 ? (
+            <div className="p-8 text-center text-xs font-mono text-slate-500">
+              Belum ada mutasi kas RDN yang tercatat. Klik "+ Top-Up Modal" untuk menyetor dana kas.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-500 uppercase text-[10px]">
+                    <th className="pb-2.5 font-bold">Waktu</th>
+                    <th className="pb-2.5 font-bold">Jenis Transaksi</th>
+                    <th className="pb-2.5 font-bold text-right">Nominal (Rp)</th>
+                    <th className="pb-2.5 font-bold text-right">Saldo Akhir RDN</th>
+                    <th className="pb-2.5 font-bold pl-4">Keterangan / Sumber Rekening</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/40">
+                  {cashFlows.map((cf, idx) => {
+                    const isTopUp = cf.type === "TOP_UP";
+                    return (
+                      <tr key={idx} className="hover:bg-slate-900/30 transition-colors">
+                        <td className="py-2.5 text-slate-400">
+                          {cf.date} · {cf.time || ""}
+                        </td>
+                        <td className="py-2.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            isTopUp
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          }`}>
+                            {cf.type_label || (isTopUp ? "Top-Up Modal" : "Tarik Saldo")}
+                          </span>
+                        </td>
+                        <td className={`py-2.5 text-right font-bold ${isTopUp ? "text-emerald-400" : "text-amber-400"}`}>
+                          {isTopUp ? "+" : "-"}{formatRupiah(cf.amount)}
+                        </td>
+                        <td className="py-2.5 text-right text-slate-200 font-bold">
+                          {formatRupiah(cf.balance_after)}
+                        </td>
+                        <td className="py-2.5 pl-4 text-slate-400 text-[11px]">
+                          {cf.notes || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL: TOP-UP MODAL RDN */}
+      {isTopUpOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cardBg border border-emerald-500/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <ArrowDownCircle className="w-5 h-5 text-emerald-400" />
+                <span>Top-Up Modal Kas RDN</span>
+              </h3>
+              <button
+                onClick={() => setIsTopUpOpen(false)}
+                className="text-slate-400 hover:text-slate-200 text-xs font-mono"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleTopUpSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-mono text-slate-400 block mb-1">
+                  Nominal Top-Up (Rp)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={10000}
+                  step={10000}
+                  value={topUpAmount}
+                  onChange={(e) => setTopUpAmount(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-100 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              {/* Quick Select Buttons */}
+              <div className="grid grid-cols-4 gap-2">
+                {["1000000", "5000000", "10000000", "50000000"].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setTopUpAmount(val)}
+                    className={`py-1 rounded-lg text-[10px] font-mono border transition-all ${
+                      topUpAmount === val
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50"
+                        : "bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800"
+                    }`}
+                  >
+                    +{parseInt(val) / 1000000} Jt
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <label className="text-xs font-mono text-slate-400 block mb-1">
+                  Catatan / Sumber Rekening
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Transfer Bank BCA / Inflow Gaji"
+                  value={topUpNotes}
+                  onChange={(e) => setTopUpNotes(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono space-y-1">
+                <div className="flex justify-between text-slate-400">
+                  <span>Kas RDN Saat Ini:</span>
+                  <span className="text-slate-200">{formatRupiah(summary.cash_balance || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Estimasi Saldo Setelah Top-Up:</span>
+                  <span className="text-emerald-400 font-bold">
+                    {formatRupiah((summary.cash_balance || 0) + (parseFloat(topUpAmount) || 0))}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTopUpOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingTopUp}
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {submittingTopUp ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ArrowDownCircle className="w-3.5 h-3.5" />}
+                  <span>Konfirmasi Top-Up</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TARIK MODAL RDN */}
+      {isWithdrawOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cardBg border border-amber-500/40 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <ArrowUpCircle className="w-5 h-5 text-amber-400" />
+                <span>Tarik Modal Kas RDN</span>
+              </h3>
+              <button
+                onClick={() => setIsWithdrawOpen(false)}
+                className="text-slate-400 hover:text-slate-200 text-xs font-mono"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-mono text-slate-400 block mb-1">
+                  Nominal Penarikan (Rp)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={10000}
+                  max={summary.cash_balance || 0}
+                  step={10000}
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Quick Select Buttons */}
+              <div className="grid grid-cols-4 gap-2">
+                {["1000000", "5000000", "10000000", String(Math.floor((summary.cash_balance || 0) / 10000) * 10000)].map((val, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setWithdrawAmount(val)}
+                    className={`py-1 rounded-lg text-[10px] font-mono border transition-all ${
+                      withdrawAmount === val
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/50"
+                        : "bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800"
+                    }`}
+                  >
+                    {i === 3 ? "Tarik Semua" : `${parseInt(val) / 1000000} Jt`}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <label className="text-xs font-mono text-slate-400 block mb-1">
+                  Catatan / Rekening Bank Tujuan
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Rekening Bank Mandiri / Realisasi Kas"
+                  value={withdrawNotes}
+                  onChange={(e) => setWithdrawNotes(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono space-y-1">
+                <div className="flex justify-between text-slate-400">
+                  <span>Kas Cair Tersedia:</span>
+                  <span className="text-slate-200 font-bold">{formatRupiah(summary.cash_balance || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Estimasi Saldo Setelah Penarikan:</span>
+                  <span className="text-amber-300 font-bold">
+                    {formatRupiah(Math.max(0, (summary.cash_balance || 0) - (parseFloat(withdrawAmount) || 0)))}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsWithdrawOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingWithdraw}
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {submittingWithdraw ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ArrowUpCircle className="w-3.5 h-3.5" />}
+                  <span>Konfirmasi Penarikan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TAMBAH SAHAM DENGAN KALKULATOR RISK-PARITY SIZING */}
       {isAddOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-cardBg border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -1382,6 +1869,32 @@ export default function PortfolioPage() {
                   />
                 </div>
               </div>
+
+              {/* Institutional Risk-Parity Button */}
+              {formPrice && (
+                <button
+                  type="button"
+                  onClick={handleCalculateRiskParity}
+                  disabled={calculatingRiskParity}
+                  className="w-full py-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <Calculator className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>{calculatingRiskParity ? "Menghitung..." : "⚡ Hitung Lot Berbasis Risiko 1% NAV"}</span>
+                </button>
+              )}
+
+              {riskParityInfo && (
+                <div className="p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/30 text-[11px] font-mono text-indigo-200 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Lot Terukur (1% Risiko NAV):</span>
+                    <strong className="text-emerald-400">{riskParityInfo.recommended_lots} Lot</strong>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>Maks Kerugian jika Kena SL:</span>
+                    <span className="text-rose-300 font-bold">{formatRupiah(riskParityInfo.max_loss_nominal)}</span>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-mono text-slate-400 block mb-1">

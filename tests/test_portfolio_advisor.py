@@ -46,6 +46,10 @@ def test_full_portfolio_analysis():
 
 
 def test_add_and_sell_holding():
+    # Test top-up modal first
+    top_up_rec = PortfolioAdvisorEngine.execute_top_up(amount=15_000_000, notes="Test Top Up")
+    assert top_up_rec["amount"] == 15_000_000
+
     # Test adding a temporary holding
     new_holding = PortfolioAdvisorEngine.add_holding(
         symbol="ASII.JK",

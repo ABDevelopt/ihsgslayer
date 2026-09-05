@@ -25,6 +25,8 @@ from src.api.routers.portfolio import router as portfolio_router
 from src.api.routers.sentiment import router as sentiment_router
 from src.api.routers.intraday_cycle import router as intraday_cycle_router
 from src.api.routers.deploy_webhook import router as deploy_webhook_router
+from src.api.routers.market_regime import router as market_regime_router
+from src.api.routers.multibagger import router as multibagger_router
 from src.api.routers.stream import router as stream_router, set_main_event_loop, broadcast_market_event
 
 logger = setup_logger("main")
@@ -144,6 +146,8 @@ app.include_router(danger_shield_router, prefix="/api/v1")
 app.include_router(sentiment_router, prefix="/api/v1")
 app.include_router(intraday_cycle_router, prefix="/api/v1")
 app.include_router(deploy_webhook_router, prefix="/api/v1")
+app.include_router(market_regime_router, prefix="/api/v1")
+app.include_router(multibagger_router, prefix="/api/v1")
 app.include_router(stream_router)
 
 @app.get("/", response_class=HTMLResponse, tags=["Web App"])

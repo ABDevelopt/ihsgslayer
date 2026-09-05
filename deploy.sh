@@ -15,6 +15,8 @@ else
 fi
 cd "$APP_DIR"
 
+PREV_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
+
 # 1. Fetch & Reset to latest main from GitHub
 echo "--> [1/4] Pulling latest changes from git origin/main..."
 git fetch origin main
@@ -39,10 +41,27 @@ npm run build
 echo "--> Restarting ihsgslayer-frontend PM2 process..."
 pm2 restart ihsgslayer-frontend || pm2 start npm --name "ihsgslayer-frontend" -- start -- -p 3300
 
-# 4. Verify deployment health
+# 4. Verify deployment health with Auto-Rollback
 echo "--> [4/4] Verifying services health..."
-sleep 3
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/v1/health || true)
-echo "Backend Health Status: HTTP $HTTP_STATUS"
+sleep 4
+cd "$APP_DIR"
+BACKEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/v1/health || true)
+PORTFOLIO_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/v1/portfolio/analysis || true)
+FRONTEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3300 || true)
 
-echo "=== [$(date '+%Y-%m-%d %H:%M:%S')] Auto-Deploy Completed Successfully! ==="
+echo "Backend /health: HTTP $BACKEND_HEALTH"
+echo "Backend /portfolio/analysis: HTTP $PORTFOLIO_HEALTH"
+echo "Frontend Next.js: HTTP $FRONTEND_HEALTH"
+
+if [ "$BACKEND_HEALTH" != "200" ] || [ "$PORTFOLIO_HEALTH" != "200" ]; then
+    echo "CRITICAL: Health check failed! Initiating automatic rollback to $PREV_COMMIT..."
+    if [ -n "$PREV_COMMIT" ]; then
+        git reset --hard "$PREV_COMMIT"
+        sudo systemctl restart ihsgslayer-backend
+        cd "$APP_DIR/frontend" && pm2 restart ihsgslayer-frontend
+        echo "Auto-rollback completed."
+    fi
+    exit 1
+fi
+
+echo "=== [$(date '+%Y-%m-%d %H:%M:%S')] Auto-Deploy Completed & Verified Successfully! ==="

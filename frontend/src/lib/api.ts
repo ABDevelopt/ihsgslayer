@@ -300,4 +300,34 @@ export const api = {
   async getPortfolioClosedTrades(): Promise<any> {
     return fetchJson("/portfolio/closed-trades");
   },
+
+  async getRiskParitySizing(entryPrice: number, stopLoss: number, riskPct = 1.0): Promise<any> {
+    return fetchJson(`/portfolio/risk-parity-sizing?entry_price=${entryPrice}&stop_loss=${stopLoss}&risk_pct=${riskPct}`);
+  },
+
+  async getMarketRegime(): Promise<any> {
+    return fetchJson("/market-regime/current");
+  },
+
+  async topUpPortfolioCash(amount: number, notes?: string): Promise<any> {
+    return fetchJson("/portfolio/top-up", {
+      method: "POST",
+      body: JSON.stringify({ amount, notes }),
+    });
+  },
+
+  async withdrawPortfolioCash(amount: number, notes?: string): Promise<any> {
+    return fetchJson("/portfolio/withdraw", {
+      method: "POST",
+      body: JSON.stringify({ amount, notes }),
+    });
+  },
+
+  async getPortfolioCashFlows(): Promise<any> {
+    return fetchJson("/portfolio/cash-flows");
+  },
+
+  async getMultibaggerCandidates(minScore = 60.0): Promise<any> {
+    return fetchJson(`/screener/multibagger?min_score=${minScore}`);
+  },
 };

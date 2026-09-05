@@ -24,7 +24,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Newspaper,
-  Wallet
+  Wallet,
+  Flame
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -94,6 +95,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           href: "/smartpick",
           label: "Pola Smart Pick",
           icon: Zap,
+        },
+        {
+          href: "/multibagger",
+          label: "Calon Multibagger",
+          icon: Flame,
+          chip: "5X Bagger",
+          chipVariant: "emerald",
         },
       ],
     },

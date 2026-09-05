@@ -138,3 +138,73 @@ async def get_closed_trades():
         "count": len(trades),
         "trades": trades
     }
+
+
+@router.get("/risk-parity-sizing")
+async def get_risk_parity_sizing(
+    entry_price: float = Query(..., description="Harga Beli (Rp)"),
+    stop_loss: float = Query(..., description="Harga Stop Loss (Rp)"),
+    risk_pct: float = Query(1.0, description="Toleransi Risiko (% NAV)")
+):
+    """
+    Calculate institutional risk-parity lot size so max loss is strictly risk_pct of NAV.
+    """
+    try:
+        portfolio_state = PortfolioAdvisorEngine.get_full_portfolio_analysis()
+        nav = portfolio_state["summary"]["total_nav"]
+        sizing = PortfolioAdvisorEngine.calculate_risk_parity_lots(
+            total_nav=nav,
+            entry_price=entry_price,
+            stop_loss=stop_loss,
+            risk_pct=risk_pct
+        )
+        return {
+            "status": "success",
+            "data": sizing
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Gagal menghitung lot sizing: {str(e)}")
+
+
+class CashFlowRequest(BaseModel):
+    amount: float = Field(..., gt=0, description="Nominal uang (Rp)")
+    notes: Optional[str] = Field(None, description="Catatan sumber/tujuan dana")
+
+
+@router.post("/top-up")
+async def top_up_cash(req: CashFlowRequest):
+    """Deposit funds into RDN cash balance (Stockbit-style Top-Up)."""
+    try:
+        record = PortfolioAdvisorEngine.execute_top_up(amount=req.amount, notes=req.notes)
+        return {
+            "status": "success",
+            "message": f"Berhasil top-up modal sebesar Rp {req.amount:,.0f} ke kas RDN.",
+            "data": record
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/withdraw")
+async def withdraw_cash(req: CashFlowRequest):
+    """Withdraw available cash from RDN (Stockbit-style Tarik Modal)."""
+    try:
+        record = PortfolioAdvisorEngine.execute_withdraw(amount=req.amount, notes=req.notes)
+        return {
+            "status": "success",
+            "message": f"Berhasil menarik modal sebesar Rp {req.amount:,.0f} dari kas RDN.",
+            "data": record
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/cash-flows")
+async def get_cash_flows():
+    """Get log of top-up deposits and withdrawals."""
+    return {
+        "status": "success",
+        "cash_flows": PortfolioAdvisorEngine.load_cash_flows()
+    }
+
+
