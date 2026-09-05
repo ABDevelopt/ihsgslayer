@@ -39,7 +39,7 @@ import PortfolioCapitalToolbar from "@/components/PortfolioCapitalToolbar";
 export default function DashboardOverviewPage() {
   const [candidates, setCandidates] = useState<BuySignalCandidate[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [minScore, setMinScore] = useState<string>("55.0");
+  const [minScore, setMinScore] = useState<string>("60.0");
   const [selectedSector, setSelectedSector] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [shariaOnly, setShariaOnly] = useState<boolean>(false);
@@ -273,12 +273,13 @@ Analisis: ${c.why_buy_summary}`;
             onChange={(e) => setMinScore(e.target.value)}
             className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
           >
-            <option value="55.0">Min. Skor 55 (Semua Rekomendasi 14 Emiten)</option>
-            <option value="60.0">Min. Skor 60 (Standar Potensi)</option>
+            <option value="60.0">Min. Skor 60 (Standar Potensi Beli / Akumulasi)</option>
             <option value="65.0">Min. Skor 65 (Standar Presisi)</option>
-            <option value="70.0">Min. Skor 70 (Solid Conviction)</option>
+            <option value="70.0">Min. Skor 70 (Solid Conviction / Strong Buy)</option>
             <option value="75.0">Min. Skor 75 (Top Tier Unggul)</option>
             <option value="80.0">Min. Skor 80 (Grade A Institusi)</option>
+            <option value="55.0">Min. Skor 55 (Semua Rekomendasi)</option>
+
           </select>
 
           {/* Refresh Button */}
@@ -369,11 +370,22 @@ Analisis: ${c.why_buy_summary}`;
                       <span
                         className={`px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold border ${scoreColor.bg} ${scoreColor.text} ${scoreColor.border}`}
                       >
-                        AI SCORE: {c.ai_score}
+                        AI SCORE: {Number(c.ai_score).toFixed(1)}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        {c.verdict_category || "BUY (LAYAK)"}
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                          c.verdict_category === "STRONG BUY"
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            : c.verdict_category?.includes("BUY") || c.verdict_category?.includes("ACCUMULATE")
+                            ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                            : c.verdict_category?.includes("HOLD")
+                            ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                            : "bg-slate-500/20 text-slate-300 border-slate-500/30"
+                        }`}
+                      >
+                        {c.verdict_category || (Number(c.ai_score) >= 70 ? "STRONG BUY" : Number(c.ai_score) >= 60 ? "BUY / ACCUMULATE" : "HOLD / WAIT & SEE")}
                       </span>
+
                     </div>
                     <div className="text-xs text-slate-400 mt-0.5">
                       {c.name} &bull; <span className="text-slate-500">{c.sector}</span>

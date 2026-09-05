@@ -342,23 +342,24 @@ async def get_stock_overview(symbol: str, days: int = Query(default=200, ge=30, 
     company_name = stock_info.get('name', symbol)
 
     if stock_metric:
-        ai_score_val = stock_metric['ai_score']
-        is_danger_val = stock_metric['is_danger_zone']
+        ai_score_val = round(float(stock_metric['ai_score']), 1)
+        is_danger_val = stock_metric.get('is_danger_zone', False)
         ai_score_dict = {
             "symbol": symbol,
-        "is_sharia": is_stock_sharia(symbol),
-        "sharia_category": "Saham Syariah (ISSI / DES)" if is_stock_sharia(symbol) else "Non-Syariah",
+            "is_sharia": is_stock_sharia(symbol),
+            "sharia_category": "Saham Syariah (ISSI / DES)" if is_stock_sharia(symbol) else "Non-Syariah",
             "date": str(ohlcv_df['date'].iloc[-1]),
             "ai_score": ai_score_val,
-            "label": stock_metric['label'],
+            "label": stock_metric.get('label', 'FAIR_VALUE'),
             "is_danger_zone": is_danger_val,
-            "profitability_score": stock_metric.get('profitability_score', 50.0),
-            "valuation_score": stock_metric.get('valuation_score', 50.0),
-            "health_score": stock_metric.get('health_score', 50.0),
-            "liquidity_score": 50.0,
-            "momentum_score": 50.0,
-            "danger_reasons": []
+            "profitability_score": round(float(stock_metric.get('profitability_score', 50.0)), 1),
+            "valuation_score": round(float(stock_metric.get('valuation_score', 50.0)), 1),
+            "health_score": round(float(stock_metric.get('health_score', 50.0)), 1),
+            "liquidity_score": round(float(stock_metric.get('liquidity_score', 50.0)), 1),
+            "momentum_score": round(float(stock_metric.get('momentum_score', 50.0)), 1),
+            "danger_reasons": stock_metric.get('warning_flags', [])
         }
+
     else:
         ai_score_val = 50.0
         is_danger_val = False

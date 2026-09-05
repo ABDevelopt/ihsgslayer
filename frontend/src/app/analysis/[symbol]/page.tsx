@@ -290,9 +290,20 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
             >
               AI SCORE: {aiScoreNum.toFixed(1)} / 100
             </span>
-            <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span
+              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${
+                verdictCategory === "STRONG BUY"
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                  : verdictCategory?.includes("BUY") || verdictCategory?.includes("ACCUMULATE")
+                  ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                  : verdictCategory?.includes("HOLD")
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                  : "bg-slate-500/20 text-slate-300 border-slate-500/30"
+              }`}
+            >
               {verdictCategory}
             </span>
+
           </div>
           <div className="text-sm text-slate-300 mt-1">
             {data.name} &bull; <span className="text-slate-400 font-mono">{data.sector}</span>

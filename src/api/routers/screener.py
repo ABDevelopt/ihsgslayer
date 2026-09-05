@@ -28,7 +28,7 @@ shield_engine = StockShieldEngine()
 # High-Performance Memory & Disk Cache
 DISK_CACHE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "precomputed_universe.json")
 _UNIVERSE_CACHE: Dict[str, Any] = {"timestamp": 0.0, "metrics": []}
-_UNIVERSE_CACHE_TTL: float = 300.0  # 5 minutes
+_UNIVERSE_CACHE_TTL: float = 86400.0  # 24 hours (authoritative deterministic universe)
 
 def _load_disk_cache():
     global _UNIVERSE_CACHE
@@ -36,8 +36,10 @@ def _load_disk_cache():
         if os.path.exists(DISK_CACHE_PATH):
             with open(DISK_CACHE_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                _UNIVERSE_CACHE["timestamp"] = data.get("timestamp", time.time())
-                _UNIVERSE_CACHE["metrics"] = data.get("metrics", [])
+                loaded_metrics = data.get("metrics", [])
+                if len(loaded_metrics) >= len(_UNIVERSE_CACHE.get("metrics", [])):
+                    _UNIVERSE_CACHE["timestamp"] = data.get("timestamp", time.time())
+                    _UNIVERSE_CACHE["metrics"] = loaded_metrics
     except Exception:
         pass
 
@@ -50,7 +52,10 @@ def _build_current_universe_metrics(force_refresh: bool = False) -> List[Dict[st
     Returns in <0.5ms from in-memory cache.
     """
     now = time.time()
-    if not force_refresh and _UNIVERSE_CACHE["metrics"] and (now - _UNIVERSE_CACHE["timestamp"]) < _UNIVERSE_CACHE_TTL:
+    if not _UNIVERSE_CACHE.get("metrics") or len(_UNIVERSE_CACHE["metrics"]) < 250:
+        _load_disk_cache()
+
+    if not force_refresh and _UNIVERSE_CACHE.get("metrics") and (now - _UNIVERSE_CACHE["timestamp"]) < _UNIVERSE_CACHE_TTL:
         return _UNIVERSE_CACHE["metrics"]
 
     universe_metrics = []
@@ -154,7 +159,7 @@ def _build_current_universe_metrics(force_refresh: bool = False) -> List[Dict[st
             "shield_plain_summary": safety.get("plain_summary", "")
         })
 
-    if universe_metrics:
+    if universe_metrics and len(universe_metrics) >= int(len(FULL_IDX_UNIVERSE) * 0.85):
         _UNIVERSE_CACHE["timestamp"] = now
         _UNIVERSE_CACHE["metrics"] = universe_metrics
 
@@ -168,10 +173,11 @@ def _build_current_universe_metrics(force_refresh: bool = False) -> List[Dict[st
         return universe_metrics
     else:
         # Rate limited or failed: preserve existing valid cache
-        if _UNIVERSE_CACHE["metrics"]:
+        if _UNIVERSE_CACHE.get("metrics") and len(_UNIVERSE_CACHE["metrics"]) >= 250:
             return _UNIVERSE_CACHE["metrics"]
         _load_disk_cache()
         return _UNIVERSE_CACHE.get("metrics", [])
+
 
 @router.post("/query")
 async def screen_stocks(filter_params: ScreenerFilter = Body(...)):
@@ -516,7 +522,7 @@ async def get_daily_ihsg_forecast(force_refresh: bool = False):
     return report.model_dump()
 
 @router.get("/buy-signals")
-async def get_institutional_buy_signals(min_score: float = 68.0):
+async def get_institutional_buy_signals(min_score: float = 60.0):
     """
     Sistem Sinyal BUY Institusional Saham Layak (High-Conviction Setups).
     Menghasilkan rekomendasi saham terkurasi dengan konfluensi Multi-Faktor AI Score,
@@ -596,18 +602,28 @@ async def get_institutional_buy_signals(min_score: float = 68.0):
                 f"terkonfirmasi {bandar_text}, setup pantulan {pat_text}, serta batas risiko terukur dengan R:R 1 : {rr_ratio:.1f}."
             )
 
+            # Quantitatively aligned verdict action category matching 360 detail page
+            if score >= 70.0:
+                verdict_action = "STRONG BUY"
+            elif score >= 60.0:
+                verdict_action = "BUY / ACCUMULATE"
+            elif score >= 50.0:
+                verdict_action = "HOLD / WAIT & SEE"
+            else:
+                verdict_action = "UNDERPERFORM / REDUCE"
+
             info = name_map.get(sym, {})
             sig_dict = {
                 "symbol": sym,
-            "is_sharia": is_stock_sharia(sym),
+                "is_sharia": is_stock_sharia(sym),
                 "name": info.get("name", sym),
                 "sector": s['sector'],
                 "subsector": info.get("subsector", ""),
                 "price": curr_p,
                 "current_price": curr_p,
                 "ai_score": round(score, 1),
-                "label": s['label'],
-                "verdict_category": "BUY (LAYAK)",
+                "label": s.get('label', 'FAIR_VALUE'),
+                "verdict_category": verdict_action,
                 "active_patterns": pats,
                 "is_hidden_accumulation": is_accum,
                 "is_orca_signal": s.get("is_orca_signal", False),

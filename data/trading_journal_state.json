@@ -2,7 +2,7 @@
   "initial_cash": 100000000.0,
   "cash_balance": 100000000.0,
   "total_equity": 100000000.0,
-  "stock_market_value": 0,
+  "stock_market_value": 0.0,
   "total_pnl_rp": 0.0,
   "total_pnl_pct": 0.0,
   "nav_per_unit": 1000.0,
