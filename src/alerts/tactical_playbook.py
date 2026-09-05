@@ -70,7 +70,7 @@ class TacticalPlaybookGenerator:
 
         tg_lines = [
             f"[SINYAL &amp; PANDUAN TAKTIS] #{sym}",
-            f"<b>[STRATEGI]</b> {strat_label} (Skor AI: {score:.0f}/100)",
+            f"<b>[STRATEGI]</b> {strat_label} (Skor AI: {score:.1f}/100)",
             f"<b>[EMITEN]</b> {name} ({sector})",
             "────────────────────────────",
             "<b>[PARAMETER HARGA]</b>",
@@ -92,7 +92,7 @@ class TacticalPlaybookGenerator:
             f"4. <b>Aturan Disiplin:</b> {time_stop_note}",
             f"5. <b>Skenario Darurat:</b> Jika harga menembus Rp {stop_loss:,.0f}, eksekusi Cut Loss tanpa kompromi.",
             "────────────────────────────",
-            f"<a href=\"http://localhost:3300/analysis/{symbol}\">[TERMINAL] Buka Analisis #{sym} di IHSG Slayer</a>"
+            f"<a href=\"http://43.163.98.53/analysis/{symbol}\">[TERMINAL] Buka Analisis #{sym} di IHSG Slayer</a>"
         ]
         telegram_html = "\n".join(tg_lines)
 
@@ -184,7 +184,7 @@ class TacticalPlaybookGenerator:
             "<b>[INSTRUKSI TINDAKAN]</b>",
             f"{action_guide}",
             "────────────────────────────",
-            "<a href=\"http://localhost:3300/forward-test\">[PORTFOLIO] Lihat Status Portofolio di IHSG Slayer</a>"
+            "<a href=\"http://43.163.98.53/forward-test\">[PORTFOLIO] Lihat Status Portofolio di IHSG Slayer</a>"
         ]
         telegram_html = "\n".join([l for l in tg_lines if l])
 
@@ -201,7 +201,7 @@ class TacticalPlaybookGenerator:
             "*[INSTRUKSI TINDAKAN]*",
             f"{action_guide}",
             "────────────────────────────",
-            "🔗 *Portofolio:* http://localhost:3300/forward-test"
+            "🔗 *Portofolio:* http://43.163.98.53/forward-test"
         ]
         whatsapp_md = "\n".join([l for l in wa_lines if l])
 

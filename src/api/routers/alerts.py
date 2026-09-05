@@ -86,31 +86,60 @@ async def detect_telegram_chat_id(bot_token: Optional[str] = None):
 
 @router.post("/test-telegram")
 async def test_telegram_notification(req: TestTelegramRequest):
-    """Send a real step-by-step sample playbook to Telegram."""
+    """Send a real step-by-step sample playbook to Telegram with live consistent data."""
     from src.alerts.telegram_bot import TelegramAlertBot
+    from src.api.routers.stocks import get_stock_details
+
+    symbol = "JECC.JK"
+    name = "Jembo Cable Company Tbk"
+    sector = "Industrial"
+    real_score = 56.6
+    entry_p = 665.0
+
+    try:
+        details = await get_stock_details("JECC")
+        if details:
+            name = details.get("name", name)
+            sector = details.get("sector", sector)
+            if details.get("price") and details.get("price") > 0:
+                entry_p = float(details["price"])
+            if details.get("ai_score") and "ai_score" in details["ai_score"]:
+                real_score = float(details["ai_score"]["ai_score"])
+    except Exception:
+        pass
+
+    target_tp1 = round(entry_p * 1.05, 0)
+    target_tp2 = round(entry_p * 1.15, 0)
+    stop_loss = round(entry_p * 0.95, 0)
 
     sample = TacticalPlaybookGenerator.generate_buy_playbook(
-        symbol="JECC.JK",
-        name="Jembo Cable Company Tbk",
-        sector="Industrial",
+        symbol=symbol,
+        name=name,
+        sector=sector,
         strategy="PRE_ARA",
-        entry_price=665.0,
-        target_tp1=700.0,
-        target_tp2=805.0,
-        stop_loss=645.0,
-        score=88.0,
+        entry_price=entry_p,
+        target_tp1=target_tp1,
+        target_tp2=target_tp2,
+        stop_loss=stop_loss,
+        score=real_score,
         selling_time_window="Pagi 09:30 - 10:15 / Plafon ARA 15:45 WIB"
+    )
+
+    test_html = (
+        "<b>[UJI COBA NOTIFIKASI TELEGRAM]</b>\n"
+        "<i>(Pesan verifikasi integrasi bot &mdash; Data tersinkronisasi pasar riil)</i>\n\n"
+        f"{sample['telegram_html']}"
     )
 
     bot = TelegramAlertBot(bot_token=req.bot_token, chat_id=req.chat_id)
     success = await bot.send_message(
-        text=sample["telegram_html"],
+        text=test_html,
         inline_button_url="http://43.163.98.53/analysis/JECC.JK",
         button_text="[ANALISIS] Buka Analisis #JECC"
     )
 
     if success:
-        return {"status": "SUCCESS", "message": "Notifikasi Telegram berhasil terkirim!"}
+        return {"status": "SUCCESS", "message": "Notifikasi Telegram berhasil terkirim!", "score_used": real_score}
     else:
         raise HTTPException(status_code=400, detail="Gagal mengirim ke Telegram. Periksa kembali Bot Token dan Chat ID.")
 
