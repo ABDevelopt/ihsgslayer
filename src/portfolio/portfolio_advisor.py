@@ -1,5 +1,6 @@
 """
 Portfolio Multi-Analysis & Daily Recommendation Engine (AI Portfolio Advisor).
+Integrated directly with the Real Trading Journal state (data/trading_journal_state.json).
 Performs holistic daily evaluations across 4 pillars:
 1. Technical & Momentum (Trend, RSI, MACD, Support/Resistance)
 2. Bandarmologi & Foreign Flow (Institutional Accumulation / Distribution)
@@ -24,122 +25,96 @@ from src.analytics.stock_shield import StockShieldEngine
 from src.analytics.broker_foreign import BrokerForeignEngine
 from src.analytics.order_flow import OrderFlowEngine
 
-PORTFOLIO_FILE = os.path.join(
-    os.path.dirname(__file__), "..", "..", "data", "portfolio_holdings.json"
+JOURNAL_FILE = os.path.join(
+    os.path.dirname(__file__), "..", "..", "data", "trading_journal_state.json"
 )
-CLOSED_TRADES_FILE = os.path.join(
-    os.path.dirname(__file__), "..", "..", "data", "portfolio_closed_trades.json"
-)
-
-DEFAULT_INITIAL_CASH = 50_000_000.0
 
 
 class PortfolioAdvisorEngine:
     _collector = DataCollector()
 
     @classmethod
-    def load_holdings(cls) -> List[Dict[str, Any]]:
-        """Load active portfolio holdings from disk."""
-        if os.path.exists(PORTFOLIO_FILE):
+    def _load_journal(cls) -> Dict[str, Any]:
+        """Load real trading journal state."""
+        if os.path.exists(JOURNAL_FILE):
             try:
-                with open(PORTFOLIO_FILE, "r", encoding="utf-8") as f:
-                    holdings = json.load(f)
-                    if isinstance(holdings, list) and len(holdings) > 0:
-                        return holdings
-            except Exception:
-                pass
-        
-        # If empty or not exists, initialize with seed holdings for immediate evaluation
-        return cls.seed_default_holdings()
-
-    @classmethod
-    def save_holdings(cls, holdings: List[Dict[str, Any]]):
-        """Save active portfolio holdings to disk."""
-        os.makedirs(os.path.dirname(PORTFOLIO_FILE), exist_ok=True)
-        with open(PORTFOLIO_FILE, "w", encoding="utf-8") as f:
-            json.dump(holdings, f, indent=2, default=str)
-
-    @classmethod
-    def load_closed_trades(cls) -> List[Dict[str, Any]]:
-        """Load realized/closed portfolio trades."""
-        if os.path.exists(CLOSED_TRADES_FILE):
-            try:
-                with open(CLOSED_TRADES_FILE, "r", encoding="utf-8") as f:
+                with open(JOURNAL_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 pass
-        return []
+        return {
+            "initial_cash": 100_000_000.0,
+            "cash_balance": 100_000_000.0,
+            "total_equity": 100_000_000.0,
+            "stock_market_value": 0.0,
+            "total_pnl_rp": 0.0,
+            "total_pnl_pct": 0.0,
+            "nav_per_unit": 1000.0,
+            "open_positions": [],
+            "closed_positions": [],
+            "nav_history": [{"date": datetime.now().strftime("%Y-%m-%d"), "nav": 1000.0}]
+        }
 
     @classmethod
-    def save_closed_trades(cls, trades: List[Dict[str, Any]]):
-        """Save realized/closed portfolio trades."""
-        os.makedirs(os.path.dirname(CLOSED_TRADES_FILE), exist_ok=True)
-        with open(CLOSED_TRADES_FILE, "w", encoding="utf-8") as f:
-            json.dump(trades, f, indent=2, default=str)
+    def _save_journal(cls, data: Dict[str, Any]):
+        """Save real trading journal state."""
+        os.makedirs(os.path.dirname(JOURNAL_FILE), exist_ok=True)
+        with open(JOURNAL_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=str)
+
+    @classmethod
+    def load_holdings(cls) -> List[Dict[str, Any]]:
+        """Load active real holdings from trading journal."""
+        journal = cls._load_journal()
+        raw_positions = journal.get("open_positions", [])
+        holdings = []
+        for pos in raw_positions:
+            sym = pos.get("symbol", "").strip().upper()
+            if not sym.endswith(".JK") and sym:
+                sym = f"{sym}.JK"
+            
+            info = get_stock_info(sym) or {}
+            entry_p = float(pos.get("entry_price", 0.0))
+            
+            tp1 = float(pos.get("target_tp1") or round(entry_p * 1.07, 0))
+            tp2 = float(pos.get("target_tp2") or round(entry_p * 1.14, 0))
+            sl = float(pos.get("stop_loss") or round(entry_p * 0.95, 0))
+
+            holding = {
+                "id": pos.get("id") or str(uuid.uuid4())[:8],
+                "symbol": sym,
+                "name": info.get("name") or sym,
+                "sector": info.get("sector", "General"),
+                "is_sharia": is_stock_sharia(sym),
+                "shares_lot": int(pos.get("shares_lot", 1)),
+                "entry_price": entry_p,
+                "entry_date": pos.get("entry_date") or datetime.now().strftime("%Y-%m-%d"),
+                "target_tp1": tp1,
+                "target_tp2": tp2,
+                "stop_loss": sl,
+                "notes": pos.get("notes") or f"Posisi #{sym}"
+            }
+            holdings.append(holding)
+        return holdings
+
+    @classmethod
+    def load_closed_trades(cls) -> List[Dict[str, Any]]:
+        """Load real closed/realized trades from trading journal."""
+        journal = cls._load_journal()
+        return journal.get("closed_positions", [])
 
     @classmethod
     def seed_default_holdings(cls) -> List[Dict[str, Any]]:
-        """Seed initial high-quality diverse holdings across key sectors."""
-        seeds = [
-            {
-                "id": "pos-bbca-01",
-                "symbol": "BBCA.JK",
-                "name": "Bank Central Asia Tbk",
-                "sector": "Financials",
-                "is_sharia": False,
-                "shares_lot": 30,
-                "entry_price": 6550.0,
-                "entry_date": "2026-08-20",
-                "target_tp1": 7150.0,
-                "target_tp2": 7500.0,
-                "stop_loss": 6350.0,
-                "notes": "Core Holding Perbankan Big-Cap, akumulasi asing konsisten"
-            },
-            {
-                "id": "pos-adro-02",
-                "symbol": "ADRO.JK",
-                "name": "Adaro Energy Indonesia Tbk",
-                "sector": "Energy",
-                "is_sharia": True,
-                "shares_lot": 70,
-                "entry_price": 2500.0,
-                "entry_date": "2026-08-25",
-                "target_tp1": 2700.0,
-                "target_tp2": 2900.0,
-                "stop_loss": 2400.0,
-                "notes": "Swing Komoditas Batu Bara & Green Energy Dividen Jumbo"
-            },
-            {
-                "id": "pos-tlkm-03",
-                "symbol": "TLKM.JK",
-                "name": "Telkom Indonesia (Persero) Tbk",
-                "sector": "Infrastructure",
-                "is_sharia": True,
-                "shares_lot": 60,
-                "entry_price": 2520.0,
-                "entry_date": "2026-08-28",
-                "target_tp1": 2850.0,
-                "target_tp2": 3050.0,
-                "stop_loss": 2420.0,
-                "notes": "Undervalued Rebound Play Telekomunikasi & Data Center"
-            },
-            {
-                "id": "pos-bris-04",
-                "symbol": "BRIS.JK",
-                "name": "Bank Syariah Indonesia Tbk",
-                "sector": "Financials",
-                "is_sharia": True,
-                "shares_lot": 50,
-                "entry_price": 1720.0,
-                "entry_date": "2026-09-01",
-                "target_tp1": 1920.0,
-                "target_tp2": 2050.0,
-                "stop_loss": 1640.0,
-                "notes": "Breakout Momentum Perbankan Syariah Pertumbuhan Tinggi"
-            }
-        ]
-        cls.save_holdings(seeds)
-        return seeds
+        """Ensure holdings exist in trading journal; return active holdings."""
+        holdings = cls.load_holdings()
+        if not holdings:
+            cls.add_holding("NELY.JK", 214.0, 2, target_tp1=230.0, stop_loss=200.0, notes="Posisi Swing NELY")
+            cls.add_holding("AGII.JK", 2974.0, 1, target_tp1=3200.0, stop_loss=2800.0, notes="Posisi Akumulasi AGII")
+            cls.add_holding("JECC.JK", 655.0, 1, target_tp1=700.0, stop_loss=620.0, notes="Posisi Breakout JECC")
+            cls.add_holding("BEST.JK", 141.0, 15, target_tp1=155.0, stop_loss=130.0, notes="Posisi Value BEST")
+            cls.add_holding("BUMI.JK", 208.0, 26, target_tp1=230.0, stop_loss=195.0, notes="Posisi Rebound BUMI")
+            holdings = cls.load_holdings()
+        return holdings
 
     @classmethod
     def add_holding(
@@ -153,8 +128,8 @@ class PortfolioAdvisorEngine:
         entry_date: Optional[str] = None,
         notes: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Add a new stock position into the portfolio."""
-        holdings = cls.load_holdings()
+        """Add real stock position into trading journal state."""
+        journal = cls._load_journal()
         sym = symbol.strip().upper()
         if not sym.endswith(".JK"):
             sym = f"{sym}.JK"
@@ -165,47 +140,63 @@ class PortfolioAdvisorEngine:
         sharia = is_stock_sharia(sym)
 
         p = float(entry_price)
+        lots = int(shares_lot)
+        total_shares = lots * 100
+        gross_cost = p * total_shares
+        buy_fee = gross_cost * 0.0015
+        total_cost = gross_cost + buy_fee
+
+        cash = float(journal.get("cash_balance", 100_000_000.0))
+        if total_cost > cash:
+            raise ValueError(f"Saldo kas RDN tidak mencukupi (Tersedia: Rp {cash:,.0f}, Dibutuhkan: Rp {total_cost:,.0f})")
+
         tp1 = float(target_tp1) if target_tp1 else round(p * 1.07, 0)
         tp2 = float(target_tp2) if target_tp2 else round(p * 1.14, 0)
         sl = float(stop_loss) if stop_loss else round(p * 0.95, 0)
         date_str = entry_date or datetime.now().strftime("%Y-%m-%d")
 
-        new_holding = {
-            "id": f"pos-{sym.split('.')[0].lower()}-{str(uuid.uuid4())[:6]}",
+        new_pos = {
+            "id": str(uuid.uuid4())[:8],
             "symbol": sym,
             "name": name,
             "sector": sector,
             "is_sharia": sharia,
-            "shares_lot": int(shares_lot),
             "entry_price": p,
+            "current_price": p,
+            "shares_lot": lots,
+            "total_shares": total_shares,
             "entry_date": date_str,
+            "invested_capital": round(total_cost, 2),
             "target_tp1": tp1,
             "target_tp2": tp2,
             "stop_loss": sl,
+            "status": "OPEN",
             "notes": notes or f"Alokasi trading #{sym}"
         }
 
-        # Check if already exists; if yes, average up/down
-        existing_idx = next((i for i, h in enumerate(holdings) if h["symbol"] == sym), None)
-        if existing_idx is not None:
-            old = holdings[existing_idx]
-            total_lots = old["shares_lot"] + new_holding["shares_lot"]
-            avg_price = (
-                (old["entry_price"] * old["shares_lot"]) + (new_holding["entry_price"] * new_holding["shares_lot"])
-            ) / total_lots
-            old["shares_lot"] = total_lots
-            old["entry_price"] = round(avg_price, 2)
-            if target_tp1:
-                old["target_tp1"] = tp1
-            if stop_loss:
-                old["stop_loss"] = sl
-            holdings[existing_idx] = old
-            cls.save_holdings(holdings)
-            return old
+        # Deduct cash
+        journal["cash_balance"] = round(cash - total_cost, 2)
+        
+        # Check if already in open_positions -> average up/down
+        existing = next((pos for pos in journal.get("open_positions", []) if pos.get("symbol") == sym), None)
+        if existing:
+            tot_lots = existing["shares_lot"] + lots
+            avg_price = ((existing["entry_price"] * existing["shares_lot"]) + (p * lots)) / tot_lots
+            existing["shares_lot"] = tot_lots
+            existing["total_shares"] = tot_lots * 100
+            existing["entry_price"] = round(avg_price, 2)
+            existing["invested_capital"] = round(existing["invested_capital"] + total_cost, 2)
+            if target_tp1: existing["target_tp1"] = tp1
+            if stop_loss: existing["stop_loss"] = sl
+            ret_pos = existing
         else:
-            holdings.append(new_holding)
-            cls.save_holdings(holdings)
-            return new_holding
+            if "open_positions" not in journal:
+                journal["open_positions"] = []
+            journal["open_positions"].append(new_pos)
+            ret_pos = new_pos
+
+        cls._save_journal(journal)
+        return ret_pos
 
     @classmethod
     def execute_sell(
@@ -216,67 +207,77 @@ class PortfolioAdvisorEngine:
         exit_date: Optional[str] = None,
         reason: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Sell part or all of a holding and record realized PnL."""
-        holdings = cls.load_holdings()
-        match_idx = next((i for i, h in enumerate(holdings) if h["id"] == holding_id), None)
+        """Sell part or all of a real position and update trading journal."""
+        journal = cls._load_journal()
+        open_positions = journal.get("open_positions", [])
+        
+        match_idx = next((i for i, pos in enumerate(open_positions) if pos.get("id") == holding_id), None)
         if match_idx is None:
-            raise ValueError(f"Holding with ID '{holding_id}' not found.")
+            raise ValueError(f"Posisi dengan ID '{holding_id}' tidak ditemukan dalam portofolio aktif.")
 
-        target = holdings[match_idx]
-        lot_to_sell = min(int(shares_lot), target["shares_lot"])
+        target = open_positions[match_idx]
+        lots_to_sell = min(int(shares_lot), target.get("shares_lot", 1))
         entry_p = float(target["entry_price"])
         exit_p = float(exit_price)
-        total_shares = lot_to_sell * 100
+        total_shares = lots_to_sell * 100
 
         gross_entry = entry_p * total_shares
         buy_fee = gross_entry * 0.0015
-        total_cost = gross_entry + buy_fee
+        cost_basis = gross_entry + buy_fee
 
         gross_exit = exit_p * total_shares
         sell_fee = gross_exit * 0.0025
         net_proceeds = gross_exit - sell_fee
 
-        realized_pnl_rp = round(net_proceeds - total_cost, 2)
-        realized_pnl_pct = round((realized_pnl_rp / total_cost) * 100.0, 2) if total_cost > 0 else 0.0
+        realized_pnl_rp = round(net_proceeds - cost_basis, 2)
+        realized_pnl_pct = round((realized_pnl_rp / cost_basis) * 100.0, 2) if cost_basis > 0 else 0.0
 
         today_str = exit_date or datetime.now().strftime("%Y-%m-%d")
         closed_trade = {
-            "id": f"trade-{str(uuid.uuid4())[:8]}",
-            "holding_id": holding_id,
+            "id": target.get("id") or str(uuid.uuid4())[:8],
             "symbol": target["symbol"],
-            "name": target["name"],
-            "sector": target["sector"],
-            "shares_lot": lot_to_sell,
+            "name": target.get("name") or target["symbol"],
+            "sector": target.get("sector", "General"),
             "entry_price": entry_p,
             "exit_price": exit_p,
-            "entry_date": target["entry_date"],
+            "shares_lot": lots_to_sell,
+            "entry_date": target.get("entry_date", today_str),
             "exit_date": today_str,
+            "status": "CLOSED",
             "realized_pnl_rp": realized_pnl_rp,
             "realized_pnl_pct": realized_pnl_pct,
-            "reason": reason or ("Take Profit" if realized_pnl_rp > 0 else "Cut Loss")
+            "notes": reason or ("Ambil Profit" if realized_pnl_rp > 0 else "Cut Loss")
         }
 
-        closed_trades = cls.load_closed_trades()
-        closed_trades.insert(0, closed_trade)
-        cls.save_closed_trades(closed_trades)
+        # Credit cash balance
+        journal["cash_balance"] = round(journal.get("cash_balance", 0.0) + net_proceeds, 2)
+        
+        if "closed_positions" not in journal:
+            journal["closed_positions"] = []
+        journal["closed_positions"].insert(0, closed_trade)
 
-        if lot_to_sell >= target["shares_lot"]:
-            # Completely closed
-            holdings.pop(match_idx)
+        # Update or remove from open_positions
+        if lots_to_sell >= target.get("shares_lot", 1):
+            open_positions.pop(match_idx)
         else:
-            target["shares_lot"] -= lot_to_sell
-            holdings[match_idx] = target
+            target["shares_lot"] -= lots_to_sell
+            target["total_shares"] = target["shares_lot"] * 100
+            target["invested_capital"] = round(target["invested_capital"] - cost_basis, 2)
+            open_positions[match_idx] = target
 
-        cls.save_holdings(holdings)
+        journal["open_positions"] = open_positions
+        cls._save_journal(journal)
         return closed_trade
 
     @classmethod
     def delete_holding(cls, holding_id: str) -> bool:
-        """Remove holding without closing trade."""
-        holdings = cls.load_holdings()
-        new_holdings = [h for h in holdings if h["id"] != holding_id]
-        if len(new_holdings) != len(holdings):
-            cls.save_holdings(new_holdings)
+        """Remove position from trading journal."""
+        journal = cls._load_journal()
+        open_positions = journal.get("open_positions", [])
+        new_positions = [pos for pos in open_positions if pos.get("id") != holding_id]
+        if len(new_positions) != len(open_positions):
+            journal["open_positions"] = new_positions
+            cls._save_journal(journal)
             return True
         return False
 
@@ -287,7 +288,7 @@ class PortfolioAdvisorEngine:
         df_ohlcv: pd.DataFrame
     ) -> Dict[str, Any]:
         """
-        Comprehensive Multi-Analysis for a single holding, yielding daily BUY/HOLD/SELL verdict.
+        Comprehensive Multi-Analysis for a single real holding, yielding daily BUY/HOLD/SELL verdict.
         """
         symbol = holding["symbol"]
         entry_price = float(holding["entry_price"])
@@ -438,7 +439,7 @@ class PortfolioAdvisorEngine:
                 f"Disarankan mengurangi 30%-50% porsi lot untuk meminimalisir risiko sebelum menyentuh Stop Loss."
             )
         elif (
-            ai_score >= 72.0
+            ai_score >= 70.0
             and bandar_status in ("BIG ACCUMULATION", "NORMAL ACCUM")
             and trend_bias == "BULLISH_UPTREND"
             and distance_tp1_pct >= 4.0
@@ -523,15 +524,19 @@ class PortfolioAdvisorEngine:
         }
 
     @classmethod
-    def get_full_portfolio_analysis(cls, cash_balance: float = DEFAULT_INITIAL_CASH) -> Dict[str, Any]:
+    def get_full_portfolio_analysis(cls, cash_balance: Optional[float] = None) -> Dict[str, Any]:
         """
-        Evaluate entire portfolio and generate daily portfolio health and action commands.
+        Evaluate entire real portfolio from trading journal state.
         """
+        journal = cls._load_journal()
+        actual_cash = float(journal.get("cash_balance", 0.0)) if cash_balance is None else float(cash_balance)
+        initial_cash = float(journal.get("initial_cash", 100_000_000.0))
+
         holdings = cls.load_holdings()
         symbols = [h["symbol"] for h in holdings]
 
-        # Fetch live OHLCV for all portfolio stocks in parallel
-        ohlcv_map = cls._collector.fetch_universe_ohlcv_parallel(symbols, period="90d", max_workers=10)
+        # Fetch live OHLCV for all actual holdings
+        ohlcv_map = cls._collector.fetch_universe_ohlcv_parallel(symbols, period="90d", max_workers=10) if symbols else {}
 
         evaluated_holdings = []
         for h in holdings:
@@ -546,9 +551,16 @@ class PortfolioAdvisorEngine:
             (total_floating_pnl_rp / total_invested) * 100.0, 2
         ) if total_invested > 0 else 0.0
 
-        total_nav = round(cash_balance + total_market_value, 2)
-        cash_ratio_pct = round((cash_balance / total_nav) * 100.0, 1) if total_nav > 0 else 100.0
+        total_nav = round(actual_cash + total_market_value, 2)
+        cash_ratio_pct = round((actual_cash / total_nav) * 100.0, 1) if total_nav > 0 else 100.0
         stock_ratio_pct = round((total_market_value / total_nav) * 100.0, 1) if total_nav > 0 else 0.0
+
+        # Update trading journal total equity & market value
+        journal["stock_market_value"] = total_market_value
+        journal["total_equity"] = total_nav
+        journal["total_pnl_pct"] = round(((total_nav - initial_cash) / initial_cash) * 100.0, 2)
+        journal["nav_per_unit"] = round((total_nav / initial_cash) * 1000.0, 2)
+        cls._save_journal(journal)
 
         action_counts: Dict[str, int] = {
             "HOLD": 0,
@@ -579,13 +591,14 @@ class PortfolioAdvisorEngine:
         sharia_val = sum(h["market_value"] for h in evaluated_holdings if h["is_sharia"])
         sharia_ratio_pct = round((sharia_val / total_market_value) * 100.0, 1) if total_market_value > 0 else 100.0
 
+        # Health score
         pnl_score = 25.0 if total_floating_pnl_pct >= 5.0 else (20.0 if total_floating_pnl_pct >= 0.0 else max(5.0, 20.0 + total_floating_pnl_pct * 1.5))
         cut_loss_count = action_counts.get("CUT_LOSS", 0)
         rec_score = 30.0 if cut_loss_count == 0 else max(5.0, 30.0 - (cut_loss_count * 15.0))
 
         avg_ai = (
             sum(h["ai_score"]["score"] for h in evaluated_holdings) / len(evaluated_holdings)
-        ) if evaluated_holdings else 70.0
+        ) if evaluated_holdings else 75.0
         ai_component = (avg_ai / 100.0) * 20.0
 
         div_score = 20.0
@@ -612,10 +625,48 @@ class PortfolioAdvisorEngine:
         closed_trades = cls.load_closed_trades()
         total_realized_pnl_rp = sum(t.get("realized_pnl_rp", 0.0) for t in closed_trades)
 
+        # Build equity history progression for charts
+        equity_history = []
+        nav_history = journal.get("nav_history", [])
+        if nav_history and len(nav_history) > 1:
+            for item in nav_history:
+                equity_history.append({
+                    "date": item.get("date", ""),
+                    "nav": item.get("nav", 1000.0),
+                    "portfolio_value": round((item.get("nav", 1000.0) / 1000.0) * initial_cash, 2)
+                })
+        else:
+            cum_pnl = 0.0
+            base_date = "2026-08-31"
+            equity_history.append({
+                "date": base_date,
+                "nav": 1000.0,
+                "portfolio_value": round(initial_cash, 2),
+                "cumulative_pnl": 0.0,
+                "label": "Modal Awal"
+            })
+            for idx, tr in enumerate(reversed(closed_trades[:15])):
+                cum_pnl += tr.get("realized_pnl_rp", 0.0)
+                d = tr.get("exit_date") or tr.get("entry_date") or base_date
+                equity_history.append({
+                    "date": d,
+                    "nav": round(1000.0 * (1.0 + (cum_pnl / initial_cash)), 2),
+                    "portfolio_value": round(initial_cash + cum_pnl, 2),
+                    "cumulative_pnl": round(cum_pnl, 2),
+                    "label": f"Trade #{idx+1} {tr.get('symbol', '').replace('.JK', '')}"
+                })
+            equity_history.append({
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "nav": round(journal.get("nav_per_unit", 1000.0), 2),
+                "portfolio_value": round(total_nav, 2),
+                "cumulative_pnl": round(total_realized_pnl_rp + total_floating_pnl_rp, 2),
+                "label": "Live Terkini"
+            })
+
         return {
             "summary": {
                 "total_nav": total_nav,
-                "cash_balance": cash_balance,
+                "cash_balance": actual_cash,
                 "total_invested": total_invested,
                 "total_market_value": total_market_value,
                 "floating_pnl_rp": total_floating_pnl_rp,
@@ -634,5 +685,7 @@ class PortfolioAdvisorEngine:
             "recommendation_summary": action_counts,
             "sector_allocation": sector_allocation,
             "holdings": evaluated_holdings,
-            "closed_trades_count": len(closed_trades)
+            "closed_trades": closed_trades[:20],
+            "closed_trades_count": len(closed_trades),
+            "equity_history": equity_history
         }

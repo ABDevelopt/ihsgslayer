@@ -36,7 +36,7 @@ class SellHoldingRequest(BaseModel):
 
 
 @router.get("/analysis")
-async def get_portfolio_analysis(cash_balance: float = Query(50_000_000.0, description="Saldo kas RDN (Rp)")):
+async def get_portfolio_analysis(cash_balance: Optional[float] = Query(None, description="Saldo kas RDN (Rp)")):
     """
     Get full multi-analysis and daily BUY/HOLD/SELL recommendations for all holdings.
     """

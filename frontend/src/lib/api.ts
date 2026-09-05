@@ -247,8 +247,9 @@ export const api = {
   },
 
   // Portfolio Multi-Analysis & Daily Recommendations
-  async getPortfolioAdvisor(cashBalance = 50000000): Promise<any> {
-    return fetchJson(`/portfolio/analysis?cash_balance=${cashBalance}`);
+  async getPortfolioAdvisor(cashBalance?: number): Promise<any> {
+    const query = cashBalance != null ? `?cash_balance=${cashBalance}` : "";
+    return fetchJson(`/portfolio/analysis${query}`);
   },
 
   async getPortfolioHoldings(): Promise<any> {
