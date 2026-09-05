@@ -444,8 +444,15 @@ class PortfolioAdvisorEngine:
         target_tp2 = float(holding.get("target_tp2") or entry_price * 1.14)
         stop_loss = float(holding.get("stop_loss") or entry_price * 0.95)
 
-        # 1. Market Price & Returns
-        if df_ohlcv is not None and not df_ohlcv.empty:
+        # 1. Market Price & Returns (TradingView Live Price first, then OHLCV, then entry_price)
+        live_q = cls._collector.get_live_quote(symbol)
+        if live_q and live_q.get("close", 0) > 0:
+            curr_price = float(live_q["close"])
+            day_change_pct = float(live_q.get("change_pct", 0.0))
+            day_high = float(live_q.get("high", curr_price))
+            day_low = float(live_q.get("low", curr_price))
+            day_volume = float(live_q.get("volume", 0.0))
+        elif df_ohlcv is not None and not df_ohlcv.empty:
             curr_price = float(df_ohlcv["close"].iloc[-1])
             prev_close = float(df_ohlcv["close"].iloc[-2]) if len(df_ohlcv) >= 2 else curr_price
             day_change_pct = round(((curr_price - prev_close) / prev_close) * 100.0, 2)
@@ -470,11 +477,17 @@ class PortfolioAdvisorEngine:
 
         # 2. Pillar 1: Technical & Momentum Indicators
         close_series = df_ohlcv["close"] if df_ohlcv is not None and len(df_ohlcv) >= 20 else pd.Series([curr_price]*25)
-        ma20 = float(close_series.rolling(window=20).mean().iloc[-1]) if len(close_series) >= 20 else curr_price
-        ma50 = float(close_series.rolling(window=min(50, len(close_series))).mean().iloc[-1]) if len(close_series) >= 20 else ma20
+        ma20 = float(live_q.get("sma20")) if (live_q and live_q.get("sma20")) else (
+            float(close_series.rolling(window=20).mean().iloc[-1]) if len(close_series) >= 20 else curr_price
+        )
+        ma50 = float(live_q.get("sma50")) if (live_q and live_q.get("sma50")) else (
+            float(close_series.rolling(window=min(50, len(close_series))).mean().iloc[-1]) if len(close_series) >= 20 else ma20
+        )
 
         # RSI 14
-        if len(close_series) >= 15:
+        if live_q and live_q.get("rsi") is not None:
+            rsi_14 = float(live_q["rsi"])
+        elif len(close_series) >= 15:
             delta = close_series.diff()
             gain = delta.where(delta > 0, 0.0).rolling(window=14).mean()
             loss = (-delta.where(delta < 0, 0.0)).rolling(window=14).mean()
@@ -717,6 +730,13 @@ class PortfolioAdvisorEngine:
 
         holdings = cls.load_holdings()
         symbols = [h["symbol"] for h in holdings]
+
+        # Batch pre-warm live quotes from TradingView for all holding symbols (~150ms)
+        if symbols:
+            try:
+                cls._collector.fetch_tradingview_quotes(symbols)
+            except Exception:
+                pass
 
         # Fetch live OHLCV for all actual holdings
         ohlcv_map = cls._collector.fetch_universe_ohlcv_parallel(symbols, period="90d", max_workers=10) if symbols else {}
