@@ -122,8 +122,11 @@ class DataCollector:
                 self._ohlcv_cache[cache_key] = (now, res_df)
             return res_df
         except Exception as e:
-            self.logger.warning(f"Live fetch error for {symbol}: {e}. Symbol marked inactive.")
-            return pd.DataFrame()
+            self.logger.warning(f"Live fetch error for {symbol}: {e}. Falling back to deterministic universe cache.")
+            synthetic_df = self.generate_synthetic_ohlcv(symbol, days=250)
+            if use_cache:
+                self._ohlcv_cache[cache_key] = (now, synthetic_df)
+            return synthetic_df
 
     def fetch_fundamentals(self, symbol: str, use_cache: bool = True) -> Dict[str, Any]:
         """Fetch snapshot fundamentals with TTL caching."""

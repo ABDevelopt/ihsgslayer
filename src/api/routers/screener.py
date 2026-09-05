@@ -153,18 +153,24 @@ def _build_current_universe_metrics(force_refresh: bool = False) -> List[Dict[st
             "shield_plain_summary": safety.get("plain_summary", "")
         })
 
-    _UNIVERSE_CACHE["timestamp"] = now
-    _UNIVERSE_CACHE["metrics"] = universe_metrics
+    if universe_metrics:
+        _UNIVERSE_CACHE["timestamp"] = now
+        _UNIVERSE_CACHE["metrics"] = universe_metrics
 
-    # Save to disk asynchronously/safely
-    try:
-        os.makedirs(os.path.dirname(DISK_CACHE_PATH), exist_ok=True)
-        with open(DISK_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump({"timestamp": now, "metrics": universe_metrics}, f)
-    except Exception:
-        pass
-
-    return universe_metrics
+        # Save to disk asynchronously/safely
+        try:
+            os.makedirs(os.path.dirname(DISK_CACHE_PATH), exist_ok=True)
+            with open(DISK_CACHE_PATH, "w", encoding="utf-8") as f:
+                json.dump({"timestamp": now, "metrics": universe_metrics}, f)
+        except Exception:
+            pass
+        return universe_metrics
+    else:
+        # Rate limited or failed: preserve existing valid cache
+        if _UNIVERSE_CACHE["metrics"]:
+            return _UNIVERSE_CACHE["metrics"]
+        _load_disk_cache()
+        return _UNIVERSE_CACHE.get("metrics", [])
 
 @router.post("/query")
 async def screen_stocks(filter_params: ScreenerFilter = Body(...)):
