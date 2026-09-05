@@ -13,7 +13,7 @@ import {
   Trophy, AlertTriangle, Target, Zap, Filter
 } from "lucide-react";
 
-const API = "http://127.0.0.1:8000/api/v1";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 const PATTERN_OPTIONS = ["AREA_DEMAND","THROWBACK_RETEST","LIQUIDITY_SWEEP","EARLY_BREAKOUT"];
 
