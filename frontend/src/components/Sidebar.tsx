@@ -25,7 +25,8 @@ import {
   ChevronRight,
   Newspaper,
   Wallet,
-  Flame
+  Flame,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -131,6 +132,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           icon: ShieldCheck,
           chip: "Win Rate",
           chipVariant: "emerald",
+        },
+        {
+          href: "/leaderboard",
+          label: "Leaderboard & Win Rate",
+          icon: Trophy,
+          chip: "Peringkat",
+          chipVariant: "amber",
         },
         {
           href: "/guide",

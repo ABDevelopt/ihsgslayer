@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ShariaBadge } from "@/components/ShariaBadge";
-import { EvaluationSummary, EvaluatedTrade, StockRankingItem } from "@/lib/types";
+import { EvaluationSummary, EvaluatedTrade } from "@/lib/types";
 import { formatRupiah, formatPercent } from "@/lib/utils";
 import { useToast } from "@/components/Toast";
 
@@ -67,30 +67,7 @@ export default function EvaluationPage() {
   const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [evaluating, setEvaluating] = useState<boolean>(false);
-  const [stockRankings, setStockRankings] = useState<StockRankingItem[]>([]);
-  const [rankingsLoading, setRankingsLoading] = useState<boolean>(true);
-  const [rankingMinSignals, setRankingMinSignals] = useState<number>(1);
-  const [rankingSortBy, setRankingSortBy] = useState<string>("win_rate");
-  const [rankingSearch, setRankingSearch] = useState<string>("");
   const { showToast } = useToast();
-
-  const loadStockRankings = async () => {
-    setRankingsLoading(true);
-    try {
-      const res = await api.getStockRankings(
-        rankingMinSignals,
-        strategyFilter || undefined,
-        categoryFilter !== "ALL" ? categoryFilter : undefined,
-        rankingSortBy,
-        50
-      );
-      setStockRankings(res.rankings || []);
-    } catch (e) {
-      console.error("Failed to load stock rankings:", e);
-    } finally {
-      setRankingsLoading(false);
-    }
-  };
 
   const loadDates = async () => {
     try {
@@ -133,7 +110,6 @@ export default function EvaluationPage() {
       const res = await api.evaluateNow();
       await loadDates();
       await loadEvaluation();
-      await loadStockRankings();
       showToast(
         res.message || "Audit berhasil: Sinkronisasi data pasar terkini!",
         "success"
@@ -154,26 +130,9 @@ export default function EvaluationPage() {
     loadEvaluation();
   }, [categoryFilter, strategyFilter, outcomeFilter, dateFilter]);
 
-  useEffect(() => {
-    loadStockRankings();
-  }, [categoryFilter, strategyFilter, rankingMinSignals, rankingSortBy]);
-
   const toggleExpand = (id: number | string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
-
-  // Client-side search filtering for leaderboard rankings
-  const filteredRankings = useMemo(() => {
-    if (!rankingSearch.trim()) return stockRankings;
-    const q = rankingSearch.trim().toLowerCase();
-    return stockRankings.filter(
-      (r) =>
-        r.symbol?.toLowerCase().includes(q) ||
-        r.clean_symbol?.toLowerCase().includes(q) ||
-        r.name?.toLowerCase().includes(q) ||
-        r.sector?.toLowerCase().includes(q)
-    );
-  }, [stockRankings, rankingSearch]);
 
   // Client-side search filtering by symbol / company name
   const filteredRecords = useMemo(() => {
@@ -514,424 +473,33 @@ export default function EvaluationPage() {
         </div>
       </div>
 
-      {/* Stock Win Rate & Performance Leaderboard */}
-      <div className="p-6 rounded-2xl bg-cardBg border border-amber-500/30 space-y-5 shadow-xl">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 border-b border-slate-800/80 pb-4">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
-                <Trophy className="w-3 h-3 text-amber-400" />
-                <span>LEADERBOARD AKURASI EMITEN</span>
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">
-                Ranking Berdasarkan Kemunculan Sinyal &amp; Audit Riil
-              </span>
-            </div>
-            <h4 className="font-bold text-base text-slate-100 mt-1 flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-400" />
-              <span>Peringkat Saham dengan Win Rate &amp; Akumulasi Gain Terbesar</span>
-            </h4>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Statistik agregat frekuensi sinyal, rasio menang/kalah riil, dan total profit per saham di bursa BEI.
-            </p>
+      {/* Navigation Banner to Dedicated Stock Leaderboard Page */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-slate-900/80 to-slate-900/80 border border-amber-500/40 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+              <Trophy className="w-3 h-3 text-amber-400" />
+              <span>HALAMAN KHUSUS LEADERBOARD</span>
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">
+              Statistik Agregat Win Rate &amp; Akumulasi Gain per Saham
+            </span>
           </div>
-
-          {/* Filter Controls for Leaderboard */}
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-            {/* Min Signals Filter */}
-            <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-[11px] font-mono">
-              <span className="text-slate-500 px-2 text-[10px]">Min Sinyal:</span>
-              {[
-                { val: 1, label: "Semua (≥1)" },
-                { val: 2, label: "≥2" },
-                { val: 3, label: "≥3 Konsisten" },
-                { val: 5, label: "≥5 Tinggi" },
-              ].map((pill) => (
-                <button
-                  key={pill.val}
-                  onClick={() => setRankingMinSignals(pill.val)}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                    rankingMinSignals === pill.val
-                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {pill.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Sort Select */}
-            <div className="flex items-center gap-1 bg-slate-900/80 px-2.5 py-1 rounded-xl border border-slate-800 text-[11px] font-mono">
-              <span className="text-slate-500 text-[10px]">Urutkan:</span>
-              <select
-                value={rankingSortBy}
-                onChange={(e) => setRankingSortBy(e.target.value)}
-                aria-label="Urutkan Peringkat Saham"
-                className="bg-transparent text-slate-200 font-bold focus:outline-none cursor-pointer"
-              >
-                <option value="win_rate" className="bg-slate-900 text-slate-200">Win Rate Tertinggi (%)</option>
-                <option value="total_pnl" className="bg-slate-900 text-slate-200">Total Gain Terbesar (%)</option>
-                <option value="total_signals" className="bg-slate-900 text-slate-200">Frekuensi Terbanyak</option>
-                <option value="avg_pnl" className="bg-slate-900 text-slate-200">Rata-rata PnL (%)</option>
-              </select>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative flex-1 sm:w-40">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-500" />
-              <input
-                type="text"
-                value={rankingSearch}
-                onChange={(e) => setRankingSearch(e.target.value)}
-                placeholder="Cari emiten..."
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50 font-mono"
-              />
-            </div>
-          </div>
+          <h4 className="font-bold text-base text-slate-100 flex items-center gap-2">
+            <Award className="w-5 h-5 text-amber-400" />
+            <span>Peringkat Saham dengan Win Rate &amp; Akumulasi Gain Terbesar</span>
+          </h4>
+          <p className="text-xs text-slate-400 max-w-2xl">
+            Untuk analisis peringkat saham terlengkap, podium juara top 3, dan penyortiran emiten dengan win rate tertinggi atau total profit terbesar, kunjungi halaman khusus Leaderboard Saham.
+          </p>
         </div>
-
-        {/* Top 3 Podium Cards */}
-        {filteredRankings.length >= 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
-            {/* Rank 1: Gold / Juara 1 */}
-            {filteredRankings[0] && (
-              <div className="relative p-4 rounded-2xl bg-gradient-to-b from-amber-500/15 via-slate-900/90 to-slate-900/90 border-2 border-amber-500/60 shadow-xl shadow-amber-500/10 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-300 font-black text-sm font-mono shadow-inner">
-                      👑 1
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-black text-base text-amber-300">
-                          {filteredRankings[0].clean_symbol}
-                        </span>
-                        {filteredRankings[0].is_sharia && <ShariaBadge isSharia={true} />}
-                      </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[170px]">
-                        {filteredRankings[0].name}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/40">
-                    JUARA 1
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-amber-500/20 font-mono text-xs">
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Win Rate</div>
-                    <div className="text-base font-black text-emerald-400">
-                      {filteredRankings[0].win_rate_pct}%
-                    </div>
-                    <div className="text-[9px] text-slate-400">
-                      {filteredRankings[0].win_count}W / {filteredRankings[0].loss_count}L ({filteredRankings[0].total_signals} sinyal)
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Total PnL</div>
-                    <div className={`text-base font-black ${filteredRankings[0].total_pnl_pct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {filteredRankings[0].total_pnl_pct > 0 ? "+" : ""}{filteredRankings[0].total_pnl_pct}%
-                    </div>
-                    <div className="text-[9px] text-slate-400">
-                      Best: +{filteredRankings[0].best_trade_pct}%
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-1 text-[10px]">
-                  <div className="flex flex-wrap gap-1">
-                    {filteredRankings[0].strategies_list?.slice(0, 2).map((s) => (
-                      <span key={s} className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[9px] font-mono font-semibold">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                  <Link
-                    href={`/analysis/${filteredRankings[0].clean_symbol}`}
-                    className="text-amber-400 hover:text-amber-300 font-mono font-bold flex items-center gap-0.5"
-                  >
-                    <span>Analisa 360°</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Rank 2: Silver / Juara 2 */}
-            {filteredRankings[1] && (
-              <div className="relative p-4 rounded-2xl bg-gradient-to-b from-slate-400/10 via-slate-900/90 to-slate-900/90 border border-slate-600/60 shadow-lg space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-slate-700/40 border border-slate-500/50 flex items-center justify-center text-slate-200 font-black text-sm font-mono">
-                      🥈 2
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-black text-base text-slate-200">
-                          {filteredRankings[1].clean_symbol}
-                        </span>
-                        {filteredRankings[1].is_sharia && <ShariaBadge isSharia={true} />}
-                      </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[170px]">
-                        {filteredRankings[1].name}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-lg bg-slate-700/40 text-slate-300 text-[10px] font-mono font-bold border border-slate-600/40">
-                    JUARA 2
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 font-mono text-xs">
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Win Rate</div>
-                    <div className="text-base font-black text-emerald-400">
-                      {filteredRankings[1].win_rate_pct}%
-                    </div>
-                    <div className="text-[9px] text-slate-400">
-                      {filteredRankings[1].win_count}W / {filteredRankings[1].loss_count}L ({filteredRankings[1].total_signals} sinyal)
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Total PnL</div>
-                    <div className={`text-base font-black ${filteredRankings[1].total_pnl_pct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {filteredRankings[1].total_pnl_pct > 0 ? "+" : ""}{filteredRankings[1].total_pnl_pct}%
-                    </div>
-                    <div className="text-[9px] text-slate-400">
-                      Best: +{filteredRankings[1].best_trade_pct}%
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-1 text-[10px]">
-                  <div className="flex flex-wrap gap-1">
-                    {filteredRankings[1].strategies_list?.slice(0, 2).map((s) => (
-                      <span key={s} className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[9px] font-mono font-semibold">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                  <Link
-                    href={`/analysis/${filteredRankings[1].clean_symbol}`}
-                    className="text-slate-300 hover:text-white font-mono font-bold flex items-center gap-0.5"
-                  >
-                    <span>Analisa 360°</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Rank 3: Bronze / Juara 3 */}
-            {filteredRankings[2] && (
-              <div className="relative p-4 rounded-2xl bg-gradient-to-b from-amber-700/10 via-slate-900/90 to-slate-900/90 border border-amber-700/50 shadow-lg space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-amber-900/30 border border-amber-700/50 flex items-center justify-center text-amber-400 font-black text-sm font-mono">
-                      🥉 3
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-black text-base text-amber-200">
-                          {filteredRankings[2].clean_symbol}
-                        </span>
-                        {filteredRankings[2].is_sharia && <ShariaBadge isSharia={true} />}
-                      </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[170px]">
-                        {filteredRankings[2].name}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-lg bg-amber-900/30 text-amber-400 text-[10px] font-mono font-bold border border-amber-700/40">
-                    JUARA 3
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 font-mono text-xs">
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Win Rate</div>
-                    <div className="text-base font-black text-emerald-400">
-                      {filteredRankings[2].win_rate_pct}%
-                    </div>
-                    <div className="text-[9px] text-slate-400">
-                      {filteredRankings[2].win_count}W / {filteredRankings[2].loss_count}L ({filteredRankings[2].total_signals} sinyal)
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Total PnL</div>
-                    <div className={`text-base font-black ${filteredRankings[2].total_pnl_pct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {filteredRankings[2].total_pnl_pct > 0 ? "+" : ""}{filteredRankings[2].total_pnl_pct}%
-                    </div>
-                    <div className="text-[9px] text-slate-400">
-                      Best: +{filteredRankings[2].best_trade_pct}%
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-1 text-[10px]">
-                  <div className="flex flex-wrap gap-1">
-                    {filteredRankings[2].strategies_list?.slice(0, 2).map((s) => (
-                      <span key={s} className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[9px] font-mono font-semibold">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                  <Link
-                    href={`/analysis/${filteredRankings[2].clean_symbol}`}
-                    className="text-amber-300 hover:text-amber-200 font-mono font-bold flex items-center gap-0.5"
-                  >
-                    <span>Analisa 360°</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Full Rankings Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-800">
-          <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-slate-900/90 text-slate-400 border-b border-slate-800">
-              <tr>
-                <th className="py-2.5 px-3 text-center w-12">#</th>
-                <th className="py-2.5 px-3">Emiten</th>
-                <th className="py-2.5 px-3">Sektor</th>
-                <th className="py-2.5 px-3 text-center">Total Sinyal</th>
-                <th className="py-2.5 px-3 text-center">Hasil (W / L / P)</th>
-                <th className="py-2.5 px-3 text-right">Win Rate</th>
-                <th className="py-2.5 px-3 text-right">Total PnL</th>
-                <th className="py-2.5 px-3 text-right">Rata-rata</th>
-                <th className="py-2.5 px-3 text-right">Max Gain</th>
-                <th className="py-2.5 px-3">Strategi</th>
-                <th className="py-2.5 px-3 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 bg-slate-950/40">
-              {rankingsLoading ? (
-                <tr>
-                  <td colSpan={11} className="py-8 text-center text-slate-400">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-amber-400" />
-                    <span>Memuat leaderboard emiten...</span>
-                  </td>
-                </tr>
-              ) : filteredRankings.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="py-8 text-center text-slate-500">
-                    Tidak ada data emiten yang memenuhi kriteria filter.
-                  </td>
-                </tr>
-              ) : (
-                filteredRankings.map((stock, idx) => (
-                  <tr
-                    key={stock.symbol}
-                    className="hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="py-2.5 px-3 text-center font-bold">
-                      {idx === 0 ? (
-                        <span className="text-amber-300">🥇 1</span>
-                      ) : idx === 1 ? (
-                        <span className="text-slate-300">🥈 2</span>
-                      ) : idx === 2 ? (
-                        <span className="text-amber-500">🥉 3</span>
-                      ) : (
-                        <span className="text-slate-500">{idx + 1}</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 font-sans">
-                      <div className="flex items-center gap-1.5">
-                        <Link
-                          href={`/analysis/${stock.clean_symbol}`}
-                          className="font-mono font-bold text-slate-100 hover:text-amber-400 transition-colors"
-                        >
-                          {stock.clean_symbol}
-                        </Link>
-                        {stock.is_sharia && <ShariaBadge isSharia={true} />}
-                      </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[150px]">
-                        {stock.name}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-400 text-[11px] truncate max-w-[120px]">
-                      {stock.sector || "General"}
-                    </td>
-                    <td className="py-2.5 px-3 text-center font-bold text-slate-200">
-                      {stock.total_signals}
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <span className="text-emerald-400 font-bold">{stock.win_count}</span>
-                      <span className="text-slate-500"> / </span>
-                      <span className="text-rose-400 font-bold">{stock.loss_count}</span>
-                      {stock.pending_count > 0 && (
-                        <>
-                          <span className="text-slate-500"> / </span>
-                          <span className="text-amber-400 font-bold" title="Trade Pending">{stock.pending_count}P</span>
-                        </>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
-                          stock.win_rate_pct >= 70
-                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                            : stock.win_rate_pct >= 50
-                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                            : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                        }`}
-                      >
-                        {stock.win_rate_pct.toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-bold">
-                      <span className={stock.total_pnl_pct >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                        {stock.total_pnl_pct > 0 ? "+" : ""}{stock.total_pnl_pct.toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-slate-300">
-                      <span className={stock.avg_pnl_pct >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                        {stock.avg_pnl_pct > 0 ? "+" : ""}{stock.avg_pnl_pct.toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
-                      +{stock.best_trade_pct.toFixed(2)}%
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex flex-wrap gap-1 max-w-[130px]">
-                        {stock.strategies_list?.map((strat) => (
-                          <span
-                            key={strat}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                              strat === "BPJS"
-                                ? "bg-emerald-500/15 text-emerald-300"
-                                : strat === "PRE_ARA"
-                                ? "bg-violet-500/20 text-violet-300"
-                                : strat === "BSJP"
-                                ? "bg-amber-500/15 text-amber-300"
-                                : "bg-indigo-500/15 text-indigo-300"
-                            }`}
-                          >
-                            {strat}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <Link
-                        href={`/analysis/${stock.clean_symbol}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 text-[10px] font-bold border border-indigo-500/30 transition-all"
-                      >
-                        <span>360°</span>
-                        <ArrowRight className="w-2.5 h-2.5" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Link
+          href="/leaderboard"
+          className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all shrink-0"
+        >
+          <span>Buka Leaderboard Emiten</span>
+          <ArrowRight className="w-4 h-4" />
+        </Link>
       </div>
 
       {/* Trade-by-Trade Table */}

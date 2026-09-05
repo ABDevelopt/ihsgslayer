@@ -48,6 +48,7 @@ const PAGE_META: Record<string, PageMeta> = {
   "/sentiment": { title: "Sentimen Makro", tag: "Berita & EIDO" },
   "/backtest": { title: "Studio Backtest", tag: "Event-Driven" },
   "/evaluation": { title: "Audit & Evaluasi", tag: "Tracking Sinyal" },
+  "/leaderboard": { title: "Peringkat & Win Rate", tag: "Leaderboard Saham" },
   "/guide": { title: "Buku Panduan", tag: "Metodologi BEI" },
 };
 
