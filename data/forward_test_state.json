@@ -363,41 +363,6 @@
   ],
   "equity_history": [
     {
-      "time": "2026-09-05 09:30",
-      "equity": 98235000.0,
-      "cash": 98235000.0,
-      "invested": 0,
-      "open_count": 0
-    },
-    {
-      "time": "2026-09-05 09:31",
-      "equity": 98235000.0,
-      "cash": 98235000.0,
-      "invested": 0,
-      "open_count": 0
-    },
-    {
-      "time": "2026-09-05 09:32",
-      "equity": 98235000.0,
-      "cash": 98235000.0,
-      "invested": 0,
-      "open_count": 0
-    },
-    {
-      "time": "2026-09-05 09:33",
-      "equity": 98235000.0,
-      "cash": 98235000.0,
-      "invested": 0,
-      "open_count": 0
-    },
-    {
-      "time": "2026-09-05 09:34",
-      "equity": 98235000.0,
-      "cash": 98235000.0,
-      "invested": 0,
-      "open_count": 0
-    },
-    {
       "time": "2026-09-05 09:35",
       "equity": 98235000.0,
       "cash": 98235000.0,
@@ -1061,9 +1026,124 @@
       "cash": 98235000.0,
       "invested": 0,
       "open_count": 0
+    },
+    {
+      "time": "2026-09-05 11:10",
+      "equity": 98235000.0,
+      "cash": 98235000.0,
+      "invested": 0,
+      "open_count": 0
+    },
+    {
+      "time": "2026-09-05 11:11",
+      "equity": 98235000.0,
+      "cash": 98235000.0,
+      "invested": 0,
+      "open_count": 0
+    },
+    {
+      "time": "2026-09-05 11:12",
+      "equity": 98235000.0,
+      "cash": 98235000.0,
+      "invested": 0,
+      "open_count": 0
+    },
+    {
+      "time": "2026-09-05 11:13",
+      "equity": 98235000.0,
+      "cash": 98235000.0,
+      "invested": 0,
+      "open_count": 0
+    },
+    {
+      "time": "2026-09-05 11:14",
+      "equity": 98235000.0,
+      "cash": 98235000.0,
+      "invested": 0,
+      "open_count": 0
     }
   ],
   "bot_logs": [
+    {
+      "id": "b1823d84",
+      "timestamp": "11:14:18 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "33a4037c",
+      "timestamp": "11:13:48 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "619ef925",
+      "timestamp": "11:13:18 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "7e211e30",
+      "timestamp": "11:12:48 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "c4676fa9",
+      "timestamp": "11:12:18 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "45d943c0",
+      "timestamp": "11:11:48 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "83a48a1e",
+      "timestamp": "11:11:18 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "21a1a4bf",
+      "timestamp": "11:10:48 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "57431fd0",
+      "timestamp": "11:10:18 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
+    {
+      "id": "f35485f1",
+      "timestamp": "11:09:48 WIB",
+      "level": "INFO",
+      "action": "HEARTBEAT_CYCLE",
+      "symbol": null,
+      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
+    },
     {
       "id": "089846ec",
       "timestamp": "11:09:18 WIB",
@@ -2579,86 +2659,6 @@
     {
       "id": "c2a16bb5",
       "timestamp": "09:34:43 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "8c92f5fd",
-      "timestamp": "09:34:12 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "51d073df",
-      "timestamp": "09:33:42 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "30642d96",
-      "timestamp": "09:33:12 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "765aff02",
-      "timestamp": "09:32:42 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "a18f88ea",
-      "timestamp": "09:32:12 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "5485a261",
-      "timestamp": "09:31:42 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "15f6b7f6",
-      "timestamp": "09:31:12 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "77fb4a3f",
-      "timestamp": "09:30:42 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "c9257479",
-      "timestamp": "09:30:12 WIB",
-      "level": "INFO",
-      "action": "HEARTBEAT_CYCLE",
-      "symbol": null,
-      "message": "Siklus Otonom Selesai: 0 Posisi Aktif dipantau | 0 Auto-Exit | 0 Posisi Baru dibuka (None)."
-    },
-    {
-      "id": "42dfa631",
-      "timestamp": "09:29:42 WIB",
       "level": "INFO",
       "action": "HEARTBEAT_CYCLE",
       "symbol": null,

@@ -247,16 +247,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                 </div>
               )}
             </Link>
-
-            {!isCollapsed && onToggleCollapse && (
-              <button
-                onClick={onToggleCollapse}
-                className="hidden lg:flex p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
-                title="Ciutkan Sidebar"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-            )}
           </div>
 
           {/* Navigation Links with Custom Sleek Scrollbar */}
@@ -352,54 +342,33 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
         {/* Footer Status Panel */}
         <div className="p-3 border-t border-slate-800/70 bg-[#080c14]/90 shrink-0">
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 py-1">
               <div className="relative flex items-center justify-center p-1" title="Feed BEI Aktif (350+ Emiten)">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
               </div>
-              {onToggleCollapse && (
-                <button
-                  onClick={onToggleCollapse}
-                  className="w-full py-1.5 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-emerald-400 transition-colors"
-                  title="Buka Sidebar (Expand)"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
             </div>
           ) : (
-            <div className="space-y-2">
-              <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/60 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-200 font-mono leading-none">
-                      FEED AKTIF
-                    </span>
-                    <span className="text-[9px] text-slate-500 font-mono mt-0.5">
-                      BEI / IDX Live
-                    </span>
-                  </div>
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="relative flex items-center justify-center">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                    350+ Emiten
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-200 font-mono leading-none">
+                    FEED AKTIF
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-mono mt-0.5">
+                    BEI / IDX Live
                   </span>
                 </div>
               </div>
-
-              {onToggleCollapse && (
-                <button
-                  onClick={onToggleCollapse}
-                  className="hidden lg:flex items-center justify-center gap-1.5 w-full py-1 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-900/60 text-[11px] font-mono transition-colors"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>Ciutkan Menu</span>
-                </button>
-              )}
+              <div className="text-right">
+                <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  350+ Emiten
+                </span>
+              </div>
             </div>
           )}
         </div>
