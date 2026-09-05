@@ -315,8 +315,17 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
         </div>
       </div>
 
-      {/* Interactive Price & Volume Chart */}
-      <InteractiveChart symbol={data.symbol || symbol} currentPrice={currentPrice} candles={data.chart_candles || data.candles || []} />
+      {/* Interactive Price & Volume Chart with S/R, BB, RSI */}
+      <InteractiveChart
+        symbol={data.symbol || symbol}
+        currentPrice={currentPrice}
+        candles={data.chart_candles || data.candles || []}
+        pivotLevels={pivotLevels}
+        bbUpper={bbUpper}
+        bbMiddle={bbMiddle}
+        bbLower={bbLower}
+        rsiValue={rsiVal}
+      />
 
       {/* Verdict & Human Explanation */}
       <div className="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-2">
