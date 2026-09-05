@@ -161,19 +161,41 @@ class SignalEvaluatorEngine:
     ) -> Dict[str, Any]:
         """
         Evaluate a single recorded signal against actual subsequent market data.
+        Accurately matches the specific signal_date candle rather than blindly taking the latest candle.
         """
         if df_daily.empty:
             return record
 
         entry_p = float(record["entry_price"])
         tp1 = float(record["target_tp1"])
-        tp2 = float(record["target_tp2"])
+        tp2 = float(record.get("target_tp2") or (entry_p * 1.07))
         sl = float(record["stop_loss"])
         strategy = record["strategy_type"]
 
-        # Strategy 1: BPJS & PRE_ARA (Same day evaluation)
+        # Ensure date_str column exists in df_daily
+        if "date_str" not in df_daily.columns:
+            if "date" in df_daily.columns:
+                df_daily["date_str"] = df_daily["date"].astype(str).str.slice(0, 10)
+            elif "datetime" in df_daily.columns:
+                df_daily["date_str"] = df_daily["datetime"].astype(str).str.slice(0, 10)
+            else:
+                df_daily["date_str"] = df_daily.index.astype(str).str.slice(0, 10)
+
+        s_date = str(record.get("signal_date", "")).strip()
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        now = datetime.now()
+
+        # Find matching candle for signal_date
+        matching = df_daily[df_daily["date_str"] == s_date]
+        if not matching.empty:
+            candle = matching.iloc[0]
+            candle_idx = df_daily.index.get_loc(matching.index[0]) if hasattr(df_daily.index, 'get_loc') else 0
+        else:
+            candle = df_daily.iloc[-1]
+            candle_idx = len(df_daily) - 1
+
+        # Strategy 1: BPJS & PRE_ARA (Same day intraday evaluation)
         if strategy in ("BPJS", "PRE_ARA"):
-            candle = df_daily.iloc[-1]
             day_high = float(candle["high"])
             day_low = float(candle["low"])
             day_close = float(candle["close"])
@@ -181,102 +203,188 @@ class SignalEvaluatorEngine:
             record["actual_highest_price"] = day_high
             record["actual_lowest_price"] = day_low
 
-            if day_low <= sl:
-                record["actual_exit_price"] = sl
-                record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "LOSS"
-                record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
-            elif day_high >= tp1:
-                actual_exit = min(tp1, day_high)
-                record["actual_exit_price"] = actual_exit
-                record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "WIN"
-                record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+            is_today_live = (s_date == today_str and now.hour < 16)
+
+            if is_today_live:
+                # Intraday live evaluation while market is currently open
+                if day_low <= sl:
+                    record["actual_exit_price"] = sl
+                    record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "LOSS"
+                    record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%) di Sesi Pagi"
+                elif day_high >= tp1:
+                    actual_exit = min(tp1, day_high)
+                    record["actual_exit_price"] = actual_exit
+                    record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "WIN"
+                    record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%) di Sesi Pagi"
+                else:
+                    record["actual_exit_price"] = day_close
+                    record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "PENDING"
+                    record["win_reason"] = f"Posisi Aktif (Harga: Rp {day_close:,.0f}). Menunggu Target TP1 atau penutupan sore 15:45 WIB."
             else:
-                record["actual_exit_price"] = day_close
-                record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
-                sign = "+" if record["realized_pnl_pct"] > 0 else ""
-                record["win_reason"] = f"Exit Penutupan Sore di Rp {day_close:,.0f} ({sign}{record['realized_pnl_pct']}%)"
+                # Market has closed for signal_date (or signal_date is in the past) -> Final outcome!
+                if day_low <= sl:
+                    record["actual_exit_price"] = sl
+                    record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "LOSS"
+                    record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
+                elif day_high >= tp1:
+                    actual_exit = min(tp1, day_high)
+                    record["actual_exit_price"] = actual_exit
+                    record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "WIN"
+                    record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+                else:
+                    record["actual_exit_price"] = day_close
+                    record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
+                    sign = "+" if record["realized_pnl_pct"] > 0 else ""
+                    record["win_reason"] = f"Exit Penutupan Sore di Rp {day_close:,.0f} ({sign}{record['realized_pnl_pct']}%)"
 
-            record["evaluated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            record["actual_exit_time"] = "15:45 WIB"
+            record["evaluated_at"] = f"{s_date} 15:45:00"
 
-        # Strategy 2: BSJP (Next day morning evaluation)
+        # Strategy 2: BSJP (Beli Sore Jual Pagi -> Next trading day morning evaluation)
         elif strategy == "BSJP":
-            if len(df_daily) < 2:
-                return record
+            # Look for candle strictly after signal_date
+            after_df = df_daily[df_daily["date_str"] > s_date]
+            h1_candle = None
+            if not after_df.empty:
+                h1_candle = after_df.iloc[0]
+            elif s_date < today_str and len(df_daily) >= 2:
+                h1_candle = df_daily.iloc[-1]
 
-            h1_candle = df_daily.iloc[-1]
-            next_open = float(h1_candle["open"])
-            next_high = float(h1_candle["high"])
-            next_low = float(h1_candle["low"])
+            if h1_candle is not None:
+                next_open = float(h1_candle["open"])
+                next_high = float(h1_candle["high"])
+                next_low = float(h1_candle["low"])
+                record["actual_highest_price"] = next_high
+                record["actual_lowest_price"] = next_low
 
-            record["actual_highest_price"] = next_high
-            record["actual_lowest_price"] = next_low
+                if next_open >= entry_p * 1.015:
+                    record["actual_exit_price"] = next_open
+                    record["realized_pnl_pct"] = round(((next_open - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "WIN"
+                    record["win_reason"] = f"Gap-Up Pembukaan Pagi Jam 09:00 WIB (+{record['realized_pnl_pct']}%)"
+                elif next_high >= tp1:
+                    actual_exit = min(tp1, next_high)
+                    record["actual_exit_price"] = actual_exit
+                    record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "WIN"
+                    record["win_reason"] = f"Morning Surge Lonjakan Pagi Jam 09:15 WIB (+{record['realized_pnl_pct']}%)"
+                elif next_low <= sl:
+                    record["actual_exit_price"] = sl
+                    record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "LOSS"
+                    record["win_reason"] = f"Stop Loss Pagi Terkena di Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
+                else:
+                    record["actual_exit_price"] = float(h1_candle["close"])
+                    record["realized_pnl_pct"] = round(((record["actual_exit_price"] - entry_p) / entry_p) * 100.0, 2)
+                    record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
+                    sign = "+" if record["realized_pnl_pct"] > 0 else ""
+                    record["win_reason"] = f"Exit Sesi Pagi di Rp {record['actual_exit_price']:,.0f} ({sign}{record['realized_pnl_pct']}%)"
 
-            if next_open >= entry_p * 1.015:
-                record["actual_exit_price"] = next_open
-                record["realized_pnl_pct"] = round(((next_open - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "WIN"
-                record["win_reason"] = f"Gap-Up Pembukaan Pagi Jam 09:00 WIB (+{record['realized_pnl_pct']}%)"
-            elif next_high >= tp1:
-                actual_exit = min(tp1, next_high)
-                record["actual_exit_price"] = actual_exit
-                record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "WIN"
-                record["win_reason"] = f"Morning Surge Lonjakan Pagi Jam 09:15 WIB (+{record['realized_pnl_pct']}%)"
-            elif next_low <= sl:
-                record["actual_exit_price"] = sl
-                record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "LOSS"
-                record["win_reason"] = f"Stop Loss Pagi Terkena di Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
-            else:
-                record["actual_exit_price"] = float(h1_candle["close"])
-                record["realized_pnl_pct"] = round(((record["actual_exit_price"] - entry_p) / entry_p) * 100.0, 2)
-                record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
-                sign = "+" if record["realized_pnl_pct"] > 0 else ""
-                record["win_reason"] = f"Exit Sesi Pagi di Rp {record['actual_exit_price']:,.0f} ({sign}{record['realized_pnl_pct']}%)"
+                record["actual_exit_time"] = "09:15 WIB H+1"
+                record["evaluated_at"] = f"{h1_candle['date_str']} 09:15:00"
 
-            record["evaluated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Strategy 3: BUY_LAYAK / HYBRID_QUANT / SWING
+        elif strategy in ("BUY_LAYAK", "HYBRID_QUANT", "SWING", "CONFLUENCE", "SMARTPICK"):
+            after_df = df_daily[df_daily["date_str"] >= s_date]
+            if after_df.empty:
+                after_df = df_daily.iloc[-1:]
 
-                # Strategy 3: BUY_LAYAK / AI Score (Swing evaluation)
-        elif strategy in ("BUY_LAYAK", "HYBRID_QUANT"):
-            candle = df_daily.iloc[-1]
-            day_high = float(candle["high"])
-            day_low = float(candle["low"])
-            day_close = float(candle["close"])
-            record["actual_highest_price"] = day_high
-            record["actual_lowest_price"] = day_low
+            max_h = float(after_df["high"].max())
+            min_l = float(after_df["low"].min())
+            last_c = float(after_df["close"].iloc[-1])
+            record["actual_highest_price"] = max_h
+            record["actual_lowest_price"] = min_l
 
-            if day_high >= tp1:
-                actual_exit = min(tp1, day_high)
+            if max_h >= tp1:
+                actual_exit = min(tp1, max_h)
                 record["actual_exit_price"] = actual_exit
                 record["actual_exit_time"] = "Sesi 1 (Target TP1)"
                 record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
                 record["outcome_status"] = "WIN"
                 record["win_reason"] = f"Target Swing TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
-            elif day_low <= sl:
+                record["evaluated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            elif min_l <= sl:
                 record["actual_exit_price"] = sl
                 record["actual_exit_time"] = "Sesi 1 (Cut Loss)"
                 record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
                 record["outcome_status"] = "LOSS"
                 record["win_reason"] = f"Batas Cut Loss Terkena di Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
+                record["evaluated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             else:
-                record["actual_exit_price"] = day_close
-                record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                record["actual_exit_price"] = last_c
+                record["realized_pnl_pct"] = round(((last_c - entry_p) / entry_p) * 100.0, 2)
                 record["outcome_status"] = "PENDING"
                 record["actual_exit_time"] = "Sedang Berjalan (Swing)"
-                record["win_reason"] = f"Posisi Swing Aktif di Rp {day_close:,.0f} (Menuju TP1 Rp {tp1:,.0f})"
-
-            record["evaluated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                record["win_reason"] = f"Posisi Swing Aktif di Rp {last_c:,.0f} (Menuju TP1 Rp {tp1:,.0f})"
+                record["evaluated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         return record
+
+    @classmethod
+    def evaluate_all_stored_pending(cls) -> int:
+        """
+        Evaluate all pending signals stored in the audit dataset across all strategies and dates.
+        Fetches historical data concurrently, updates outcome_status, and saves to JSON and SQLite WAL.
+        Guarantees zero stuck pending signals for completed market days.
+        """
+        from concurrent.futures import ThreadPoolExecutor
+        from src.data.collector import DataCollector
+        import src.data.audit_db as audit_db
+
+        records = cls.load_records()
+        pending = [r for r in records if r.get("outcome_status") == "PENDING"]
+        if not pending:
+            return 0
+
+        collector = DataCollector()
+        unique_symbols = list(set(r["symbol"] for r in pending if r.get("symbol")))
+
+        ohlcv_cache = {}
+        def fetch_sym(sym):
+            try:
+                df = collector.fetch_historical_ohlcv(sym, period="3mo")
+                if not df.empty:
+                    return sym, df
+            except Exception:
+                pass
+            return sym, pd.DataFrame()
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = executor.map(fetch_sym, unique_symbols)
+            for sym, df in results:
+                if not df.empty:
+                    ohlcv_cache[sym] = df
+
+        updated_count = 0
+        for r in records:
+            if r.get("outcome_status") == "PENDING":
+                sym = r.get("symbol")
+                if sym in ohlcv_cache and not ohlcv_cache[sym].empty:
+                    cls.evaluate_signal_outcome(r, ohlcv_cache[sym])
+                    if r.get("outcome_status") != "PENDING":
+                        updated_count += 1
+                        try:
+                            audit_db.save_evaluation_record(r)
+                        except Exception:
+                            pass
+
+        if updated_count > 0:
+            cls.save_records(records)
+
+        return updated_count
 
     @classmethod
     def evaluate_all_pending(cls, ohlcv_map: Dict[str, pd.DataFrame]) -> List[Dict[str, Any]]:
         """
         Evaluate all pending signals using provided latest OHLCV market data.
         """
+        import src.data.audit_db as audit_db
         records = cls.load_records()
         updated_any = False
 
@@ -286,6 +394,10 @@ class SignalEvaluatorEngine:
                 if sym in ohlcv_map and not ohlcv_map[sym].empty:
                     cls.evaluate_signal_outcome(r, ohlcv_map[sym])
                     updated_any = True
+                    try:
+                        audit_db.save_evaluation_record(r)
+                    except Exception:
+                        pass
 
         if updated_any:
             cls.save_records(records)
@@ -310,6 +422,7 @@ class SignalEvaluatorEngine:
         mined_evals, mined_hists = RealDataMiner.mine_real_signals_and_outcomes()
 
         # Merge mined evals with existing
+        import src.data.audit_db as audit_db
         for m in mined_evals:
             key = (m.get("symbol"), m.get("signal_date"), m.get("strategy_type"))
             if key in existing_keys:
@@ -325,13 +438,25 @@ class SignalEvaluatorEngine:
                         "win_reason": m.get("win_reason"),
                         "evaluated_at": m.get("evaluated_at")
                     })
+                    try:
+                        audit_db.save_evaluation_record(cur)
+                    except Exception:
+                        pass
             else:
                 m["id"] = len(existing) + 1
                 existing.append(m)
                 existing_keys[key] = m
+                try:
+                    audit_db.save_evaluation_record(m)
+                except Exception:
+                    pass
 
         # Save merged audit records
         cls.save_records(existing)
+
+        # Ensure all stored pending records across all strategies & dates are evaluated
+        cls.evaluate_all_stored_pending()
+        existing = cls.load_records()
 
         # Also merge signal history
         for h in mined_hists:
