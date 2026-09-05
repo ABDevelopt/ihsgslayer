@@ -188,8 +188,8 @@ class BrokerForeignEngine:
             dist_pct = 0.0
 
         # Golden Entry: within -3% to +2.5% of Bandar VWAP during accumulation
-        is_accum = cr3 >= 50.0
-        is_golden_entry = is_accum and (-4.0 <= dist_pct <= 2.5)
+        is_accum = bool(cr3 >= 50.0)
+        is_golden_entry = bool(is_accum and (-4.0 <= dist_pct <= 2.5))
 
         # 4. Foreign Flow
         nfsi = 0.0

@@ -166,38 +166,38 @@ class MultibaggerHunterEngine:
             target_bagger_400 = round(curr_price * 2.2, 0)
 
         return {
-            "symbol": symbol,
-            "name": name,
-            "sector": sector,
-            "is_sharia": is_sharia,
-            "current_price": curr_price,
-            "high_52w": high_52w,
-            "low_52w": low_52w,
-            "multibagger_score": total_score,
-            "potential_grade": grade,
-            "grade_badge": grade_badge,
-            "grade_color": grade_color,
-            "potential_multiple": multiple_text,
-            "target_bagger_100": target_bagger_100,
-            "target_bagger_200": target_bagger_200,
-            "target_bagger_400": target_bagger_400,
-            "catalyst_summary": catalyst,
+            "symbol": str(symbol),
+            "name": str(name),
+            "sector": str(sector),
+            "is_sharia": bool(is_sharia),
+            "current_price": float(curr_price),
+            "high_52w": float(high_52w),
+            "low_52w": float(low_52w),
+            "multibagger_score": int(total_score),
+            "potential_grade": str(grade),
+            "grade_badge": str(grade_badge),
+            "grade_color": str(grade_color),
+            "potential_multiple": str(multiple_text),
+            "target_bagger_100": float(target_bagger_100),
+            "target_bagger_200": float(target_bagger_200),
+            "target_bagger_400": float(target_bagger_400),
+            "catalyst_summary": str(catalyst),
             "minervini_template": {
-                "stage_2_passed": is_stage_2,
+                "stage_2_passed": bool(is_stage_2),
                 "criteria_met": f"{stage_2_criteria_count} / 6 Kriteria",
-                "ma50": round(ma50, 1),
-                "ma150": round(ma150, 1),
-                "ma200": round(ma200, 1),
-                "above_52w_low_pct": round(((curr_price - low_52w) / low_52w) * 100.0, 1),
-                "near_52w_high_pct": round(((high_52w - curr_price) / high_52w) * 100.0, 1)
+                "ma50": float(round(ma50, 1)),
+                "ma150": float(round(ma150, 1)),
+                "ma200": float(round(ma200, 1)),
+                "above_52w_low_pct": float(round(((curr_price - low_52w) / low_52w) * 100.0, 1)),
+                "near_52w_high_pct": float(round(((high_52w - curr_price) / high_52w) * 100.0, 1))
             },
             "bandarmologi": {
-                "cr3_pct": cr3,
-                "bandar_vwap": bandar_vwap,
-                "is_golden_entry": is_golden,
-                "stealth_accumulation": is_accum
+                "cr3_pct": float(cr3),
+                "bandar_vwap": float(bandar_vwap),
+                "is_golden_entry": bool(is_golden),
+                "stealth_accumulation": bool(is_accum)
             },
-            "vcp_compression": has_vcp,
+            "vcp_compression": bool(has_vcp),
             "recommended_entry_range": f"Rp {int(curr_price * 0.98):,} - Rp {int(curr_price * 1.02):,}",
-            "stop_loss_multibagger": round(curr_price * 0.92, 0)  # 8% risk tolerance for swing bagger
+            "stop_loss_multibagger": float(round(curr_price * 0.92, 0))
         }
