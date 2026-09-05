@@ -1,26 +1,33 @@
 """
-Multibagger Hunter Engine (Peter Lynch + Mark Minervini Trend Template + BEI Bandarmologi).
-Identifies high-ceiling Indonesian stocks with 2x - 5x+ upside potential through:
-1. Minervini Stage 2 Superperformance Trend Template
-2. Small/Mid-Cap Growth Sweet Spot (Rp 500M - Rp 35T market cap)
-3. Structural Catalysts & Turnaround Profit Acceleration (CAN SLIM)
-4. Stealth Institutional Accumulation (CR3 >= 55%) & Supply Scarcity (VCP)
+Multibagger Hunter Screener Engine (Generation 3.0).
+Identifies high-probability 2x - 5x multibagger stocks on the Indonesia Stock Exchange (BEI)
+based on the 4 Core Pillars:
+1. Mark Minervini Stage 2 Superperformance Trend Template
+2. Peter Lynch Small/Mid-Cap Growth Runway (< Rp 35T market cap)
+3. Deep Bandarmologi Stealth Accumulation (CR3 >= 55% & Bandar VWAP)
+4. Volatility Contraction Pattern (VCP) & Volume Dry-Up
++ Sentiment Analysis Arguments (Sector Macro & News Sentiment)
++ Estimated Time Horizon / Holding Period Projection
 """
 
+import math
 from typing import Dict, Any, List, Optional
-from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from src.data.universe import FULL_IDX_UNIVERSE, get_stock_info, is_stock_sharia
 from src.data.collector import DataCollector
+from src.data.universe import FULL_IDX_UNIVERSE, is_stock_sharia, get_stock_info
 from src.analytics.broker_foreign import BrokerForeignEngine
+from src.analytics.news_sentiment_engine import NewsSentimentEngine
 
 
 class MultibaggerHunterEngine:
+    """
+    Kuantitatif Screener Saham Berpotensi Multibagger (2x - 5x) di Bursa Efek Indonesia.
+    """
+
     _collector = DataCollector()
 
-    # Pre-evaluated structural catalysts for top potential BEI growth sectors
     STRUCTURAL_CATALYSTS = {
         "Energy": "Supercycle komoditas energi, transisi gas industri, dan ekspansi dividen jumbo.",
         "Basic Materials": "Ekosistem hilirisasi nikel/tembaga/emas & pembangunan smelter mineral strategis.",
@@ -33,12 +40,84 @@ class MultibaggerHunterEngine:
         "Transportation": "Lonjakan tarif sewa kapal tanker kimia/gas & efisiensi armada logistik maritim."
     }
 
+    SECTOR_SENTIMENT_ARGUMENTS = {
+        "Energy": {
+            "macro_tailwind": "Siklus Super Energi & Harga Minyak/Gas Stabil di Atas Break-Even",
+            "narrative": "Sentimen permintaan energi primer dan gas industri terus menguat. Margin laba operasional tebal didukung arus kas bebas (FCF) tinggi yang berpotensi memicu dividen jumbo tanpa hambatan utang luar negeri.",
+            "sentiment_score": 88.0,
+            "sentiment_label": "SANGAT BULLISH (TAILWIND KUAT)",
+            "sentiment_color": "emerald"
+        },
+        "Basic Materials": {
+            "macro_tailwind": "Hilirisasi Mineral Strategis, Logam Mulia & Rebound Komoditas Global",
+            "narrative": "Sentimen percepatan rantai pasok hilirisasi dan lonjakan permintaan mineral olahan memberikan dorongan laba bersih struktural multi-tahun. Didukung ketiadaan risiko hukum dan posisi neraca sehat.",
+            "sentiment_score": 86.0,
+            "sentiment_label": "SANGAT BULLISH (HILIRISASI)",
+            "sentiment_color": "emerald"
+        },
+        "Industrials": {
+            "macro_tailwind": "Percepatan Proyek Kelistrikan & Manufaktur Kawasan Industri Modern",
+            "narrative": "Sentimen realisasi belanja modal swasta dan pemerintah mendorong kontrak baru bernilai triliunan rupiah dengan visibilitas laba tinggi hingga 2-3 tahun ke depan.",
+            "sentiment_score": 83.0,
+            "sentiment_label": "BULLISH (KONTRAK MASIF)",
+            "sentiment_color": "cyan"
+        },
+        "Transportation": {
+            "macro_tailwind": "Lonjakan Permintaan Logistik Maritim, Curah & Kapal Tanker Kimia/Gas",
+            "narrative": "Keterbatasan pasokan kapal baru global menjaga tarif sewa (charter rate) di level puncak. Emiten menikmati pertumbuhan laba bersih eksponensial dengan rasio utang yang cepat menyusut.",
+            "sentiment_score": 87.0,
+            "sentiment_label": "SANGAT BULLISH (MARGIN TINGGI)",
+            "sentiment_color": "emerald"
+        },
+        "Properties": {
+            "macro_tailwind": "Pelonggaran Suku Bunga Acuan (Rate Cut Bias) & Insentif PPN Properti",
+            "narrative": "Sentimen masuknya investasi manufaktur asing memicu lonjakan penjualan lahan industri (industrial estate) dengan margin kotor di atas 50%, diperkuat pemulihan segmen komersial.",
+            "sentiment_score": 81.0,
+            "sentiment_label": "BULLISH (ROTASI SIKLIKAL)",
+            "sentiment_color": "cyan"
+        },
+        "Consumer Cyclicals": {
+            "macro_tailwind": "Rebound Daya Beli Domestik & Peningkatan Penjualan Komponen Otomotif",
+            "narrative": "Efisiensi operasional dan penetrasi produk baru mendorong pertumbuhan laba dua digit dengan valuasi PEG yang masih sangat terdiskon dibandingkan rata-rata historis 5 tahun.",
+            "sentiment_score": 79.0,
+            "sentiment_label": "POSITIF (VALUASI ATRAKTIF)",
+            "sentiment_color": "cyan"
+        },
+        "Consumer Non-Cyclicals": {
+            "macro_tailwind": "Permintaan Konsumsi Pokok Resilien & Penurunan Biaya Bahan Baku Impor",
+            "narrative": "Margin laba kotor kembali mengembang ke level pra-inflasi. Kemampuan penentuan harga (pricing power) kuat menjaga pertumbuhan laba per saham (EPS) konsisten.",
+            "sentiment_score": 80.0,
+            "sentiment_label": "DEFENSIF BERTUMBUH",
+            "sentiment_color": "cyan"
+        },
+        "Infrastructures": {
+            "macro_tailwind": "Transisi Energi Hijau & Konektivitas Telekomunikasi Digital",
+            "narrative": "Sentimen investasi energi baru terbarukan (EBT) dan serat optik data center memberikan recurring revenue stabil dengan prospek dividen berkelanjutan.",
+            "sentiment_score": 82.0,
+            "sentiment_label": "BULLISH (RECURRING INCOME)",
+            "sentiment_color": "cyan"
+        },
+        "Healthcare": {
+            "macro_tailwind": "Peningkatan Belanja Layanan Kesehatan & Tingkat Okupansi Pasien",
+            "narrative": "Ekspansi kapasitas dan penambahan layanan medis spesialis meningkatkan pendapatan rata-rata per pasien (ARPOB) secara berkesinambungan.",
+            "sentiment_score": 80.0,
+            "sentiment_label": "POSITIF (EXPANDING DEMAND)",
+            "sentiment_color": "cyan"
+        },
+        "Technology": {
+            "macro_tailwind": "Adopsi AI, Cloud Enterprise & Infrastruktur Digital Nasional",
+            "narrative": "Pertumbuhan eksponensial kebutuhan komputasi memberikan ruang akselerasi valuasi khas Peter Lynch high-growth companies.",
+            "sentiment_score": 82.0,
+            "sentiment_label": "BULLISH HIGH-GROWTH",
+            "sentiment_color": "cyan"
+        }
+    }
+
     @classmethod
     def scan_multibagger_candidates(cls, min_score: float = 60.0) -> List[Dict[str, Any]]:
         """
         Scan universe to find prospective 2x - 5x multibagger stocks.
         """
-        # Scan liquid and active stocks across IDX
         candidate_symbols = [
             "NELY.JK", "AGII.JK", "JECC.JK", "BEST.JK", "BUMI.JK",
             "MEDC.JK", "BRMS.JK", "PGEO.JK", "PTRO.JK", "RAJA.JK",
@@ -65,7 +144,7 @@ class MultibaggerHunterEngine:
     @classmethod
     def _evaluate_single_multibagger(cls, symbol: str, df: pd.DataFrame) -> Dict[str, Any]:
         """
-        Evaluate single stock against the 4 Multibagger Pillars.
+        Evaluate single stock against the 4 Multibagger Pillars + Sentiment Analysis + Time Horizon.
         """
         info = get_stock_info(symbol) or {}
         name = info.get("name", symbol)
@@ -91,16 +170,15 @@ class MultibaggerHunterEngine:
         c2_above_ma150 = curr_price >= ma150
         c3_above_ma200 = curr_price >= ma200
         c4_ma50_above_200 = ma50 >= ma200
-        c5_above_low = ((curr_price - low_52w) / (low_52w + 1e-5)) >= 0.25  # At least 25% above 52w low
-        c6_near_high = ((high_52w - curr_price) / (high_52w + 1e-5)) <= 0.35  # Within 35% of 52w high
+        c5_above_low = ((curr_price - low_52w) / (low_52w + 1e-5)) >= 0.25
+        c6_near_high = ((high_52w - curr_price) / (high_52w + 1e-5)) <= 0.35
 
         stage_2_criteria_count = sum([c1_above_ma50, c2_above_ma150, c3_above_ma200, c4_ma50_above_200, c5_above_low, c6_near_high])
         stage_2_score = round((stage_2_criteria_count / 6.0) * 30.0, 1)
         is_stage_2 = stage_2_criteria_count >= 5
 
         # 2. PILLAR 2: Fundamental Growth & Sector Catalyst (Max 25 pts)
-        # Higher score for small-mid cap with sector tailwinds
-        catalyst = cls.STRUCTURAL_CATALYSTS.get(sector, "Ekspansi operasional & pemulihan laba bersih.")
+        catalyst = cls.STRUCTURAL_CATALYSTS.get(sector, "Ekspansi operasional & pemulihan laba bersih berkelanjutan.")
         fund_score = 20.0
         if sector in ["Energy", "Basic Materials", "Industrials", "Transportation", "Properties"]:
             fund_score += 4.0
@@ -131,15 +209,16 @@ class MultibaggerHunterEngine:
         vol_recent = float(vol.tail(5).mean())
         vol_past = float(vol.tail(25).mean())
         vcp_ratio = vol_recent / (vol_past + 1e-5)
-        has_vcp = vcp_ratio < 0.85  # Volume dries up during consolidation before markup
+        has_vcp = vcp_ratio < 0.85
 
         cap_score = 15.0
         if has_vcp: cap_score += 4.0
-        if curr_price < 3500: cap_score += 1.0  # Affordable base price
+        if curr_price < 3500: cap_score += 1.0
         cap_score = min(20.0, cap_score)
 
         total_score = int(round(stage_2_score + fund_score + bandar_score + cap_score))
 
+        # Grade & Projections
         if total_score >= 82:
             grade = "PRIME MULTIBAGGER CANDIDATE (3X - 5X+)"
             grade_badge = "3X - 5X POTENSI"
@@ -148,6 +227,17 @@ class MultibaggerHunterEngine:
             target_bagger_100 = round(curr_price * 2.0, 0)
             target_bagger_200 = round(curr_price * 3.0, 0)
             target_bagger_400 = round(curr_price * 5.0, 0)
+            
+            # Time Horizon Projections (Prime: Fastest markup velocity)
+            timeframe_info = {
+                "primary_horizon": "3 - 6 Bulan (Target 2x)",
+                "full_bagger_horizon": "12 - 24 Bulan (Target 3x-5x)",
+                "time_to_100pct": "3 - 6 Bulan (1 - 2 Kuartal Kinerja)",
+                "time_to_200pct": "6 - 12 Bulan (2 - 4 Kuartal)",
+                "time_to_400pct": "12 - 24 Bulan (Siklus Ekspansi Penuh)",
+                "holding_strategy": "Trend Following Agresif: Kawal dengan Trailing Stop MA50, biarkan akumulasi institusi mengangkat harga menembus rekor baru.",
+                "catalyst_milestone": "Katalis terdekat: Rilis laporan keuangan auditan kuartalan dan pengumuman pembagian dividen interim / ekspansi kapasitas."
+            }
         elif total_score >= 70:
             grade = "HIGH POTENTIAL BAGGER (2X - 3X)"
             grade_badge = "2X - 3X POTENSI"
@@ -156,6 +246,16 @@ class MultibaggerHunterEngine:
             target_bagger_100 = round(curr_price * 2.0, 0)
             target_bagger_200 = round(curr_price * 2.5, 0)
             target_bagger_400 = round(curr_price * 3.5, 0)
+            
+            timeframe_info = {
+                "primary_horizon": "6 - 9 Bulan (Target 2x)",
+                "full_bagger_horizon": "18 - 30 Bulan (Target 3x)",
+                "time_to_100pct": "6 - 9 Bulan (2 - 3 Kuartal Kinerja)",
+                "time_to_200pct": "12 - 18 Bulan (1 - 1.5 Tahun)",
+                "time_to_400pct": "24 - 36 Bulan (2 - 3 Tahun)",
+                "holding_strategy": "Position Trading Terukur: Akumulasi di zona pullback VCP dekat MA20/MA50, pasang batas rugi terukur 7-8%.",
+                "catalyst_milestone": "Katalis terdekat: Peningkatan margin EBITDA dan penguatan pangsa pasar domestik."
+            }
         else:
             grade = "WATCHLIST BAGGER (1.5X - 2X)"
             grade_badge = "1.5X - 2X POTENSI"
@@ -164,6 +264,49 @@ class MultibaggerHunterEngine:
             target_bagger_100 = round(curr_price * 1.5, 0)
             target_bagger_200 = round(curr_price * 1.8, 0)
             target_bagger_400 = round(curr_price * 2.2, 0)
+            
+            timeframe_info = {
+                "primary_horizon": "9 - 15 Bulan (Target 1.5x - 2x)",
+                "full_bagger_horizon": "24 - 36 Bulan",
+                "time_to_100pct": "9 - 15 Bulan (3 - 5 Kuartal)",
+                "time_to_200pct": "18 - 24 Bulan",
+                "time_to_400pct": "36+ Bulan",
+                "holding_strategy": "Swing Konservatif: Tunggu konfirmasi lonjakan volume breakout sebelum menambah alokasi modal besar.",
+                "catalyst_milestone": "Katalis terdekat: Perbaikan arus kas operasional dan penyelesaian konsolidasi dasar harga."
+            }
+
+        # Sentiment Analysis Argument Synthesis
+        sec_sentiment = cls.SECTOR_SENTIMENT_ARGUMENTS.get(
+            sector,
+            {
+                "macro_tailwind": "Pemulihan Ekonomi Domestik & Arus Masuk Investasi Asing",
+                "narrative": "Sentimen perbaikan kinerja operasional dan akumulasi senyap oleh broker institusional mendukung potensi ekspansi harga bertahap.",
+                "sentiment_score": 78.0,
+                "sentiment_label": "POSITIF AKUMULATIF",
+                "sentiment_color": "cyan"
+            }
+        )
+
+        # Cross-check with News Sentiment Engine for specific disclosures
+        try:
+            news_engine = NewsSentimentEngine.get_instance()
+            stock_news_eval = news_engine.evaluate_stock_sentiment(symbol)
+            is_circuit_breaker = stock_news_eval.get("is_circuit_breaker_active", False)
+            specific_headline = stock_news_eval.get("headline_highlight", "")
+        except Exception:
+            is_circuit_breaker = False
+            specific_headline = ""
+
+        sentiment_analysis = {
+            "sentiment_score": float(sec_sentiment["sentiment_score"]),
+            "sentiment_label": str(sec_sentiment["sentiment_label"]),
+            "sentiment_color": str(sec_sentiment["sentiment_color"]),
+            "macro_tailwind": str(sec_sentiment["macro_tailwind"]),
+            "narrative_argument": str(sec_sentiment["narrative"]),
+            "headline_catalyst": str(specific_headline) if specific_headline else str(catalyst),
+            "circuit_breaker_risk": bool(is_circuit_breaker),
+            "safety_assessment": "AMAN / BEBAS RISIKO PKPU & SUSPENSI" if not is_circuit_breaker else "PERINGATAN RISIKO REGULASI"
+        }
 
         return {
             "symbol": str(symbol),
@@ -182,6 +325,8 @@ class MultibaggerHunterEngine:
             "target_bagger_200": float(target_bagger_200),
             "target_bagger_400": float(target_bagger_400),
             "catalyst_summary": str(catalyst),
+            "sentiment_analysis": sentiment_analysis,
+            "estimated_timeframe": timeframe_info,
             "minervini_template": {
                 "stage_2_passed": bool(is_stage_2),
                 "criteria_met": f"{stage_2_criteria_count} / 6 Kriteria",

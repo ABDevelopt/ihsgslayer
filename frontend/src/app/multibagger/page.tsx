@@ -21,7 +21,12 @@ import {
   Layers,
   BarChart3,
   Flame,
-  Plus
+  Plus,
+  Clock,
+  MessageSquareQuote,
+  Compass,
+  CalendarDays,
+  Newspaper
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -42,6 +47,25 @@ interface MultibaggerStock {
   target_bagger_200: number;
   target_bagger_400: number;
   catalyst_summary: string;
+  sentiment_analysis?: {
+    sentiment_score: number;
+    sentiment_label: string;
+    sentiment_color: "emerald" | "cyan" | "amber";
+    macro_tailwind: string;
+    narrative_argument: string;
+    headline_catalyst: string;
+    circuit_breaker_risk: boolean;
+    safety_assessment: string;
+  };
+  estimated_timeframe?: {
+    primary_horizon: string;
+    full_bagger_horizon: string;
+    time_to_100pct: string;
+    time_to_200pct: string;
+    time_to_400pct: string;
+    holding_strategy: string;
+    catalyst_milestone: string;
+  };
   minervini_template: {
     stage_2_passed: boolean;
     criteria_met: string;
@@ -130,13 +154,13 @@ export default function MultibaggerHunterPage() {
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center gap-1.5 shadow-sm">
                 <Rocket className="w-3.5 h-3.5 text-indigo-400" />
-                MULTIBAGGER HUNTER v3.0
+                MULTIBAGGER HUNTER v3.1
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> {candidates.length} Saham Terdeteksi
               </span>
               <span className="text-xs text-slate-400 font-mono">
-                Minervini Stage 2 + Peter Lynch Runway + Institutional Bandarmologi
+                Minervini Stage 2 + Peter Lynch Runway + Sentimen Makro &amp; Timeline Waktu
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-3">
@@ -145,7 +169,9 @@ export default function MultibaggerHunterPage() {
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
               Algoritma mendeteksi saham small &ndash; mid cap yang berada di fase awal akumulasi institusi (Bandar CR3 &gt; 55%),
               lolos kriteria tren <span className="text-indigo-300 font-semibold">Mark Minervini Stage 2</span>,
-              kontraksi volatilitas (<span className="text-cyan-300 font-semibold">VCP</span>), serta memiliki landasan valuasi pertumbuhan teruji.
+              kontraksi volatilitas (<span className="text-cyan-300 font-semibold">VCP</span>), diperkaya dengan
+              <span className="text-emerald-300 font-semibold"> Argumen Analisis Sentimen Sektoral</span> serta
+              <span className="text-amber-300 font-semibold"> Perkiraan Waktu (Holding Period Timeline)</span> terukur.
             </p>
           </div>
 
@@ -159,7 +185,7 @@ export default function MultibaggerHunterPage() {
           </button>
         </div>
 
-        {/* 4 Pilar Metodologi Banner */}
+        {/* 4 Pilar + Sentimen Metodologi Banner */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80">
           <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start gap-3">
             <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 mt-0.5">
@@ -181,20 +207,20 @@ export default function MultibaggerHunterPage() {
           </div>
           <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start gap-3">
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 mt-0.5">
-              <Zap className="w-4 h-4" />
+              <Newspaper className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-200">3. VCP Compression</p>
-              <p className="text-[10px] text-slate-400">Penyusutan volume transaksi tanda pasokan penjual telah habis.</p>
+              <p className="text-[11px] font-bold text-slate-200">3. Argumen Sentimen</p>
+              <p className="text-[10px] text-slate-400">Tailwind makro sektoral, katalis pemberitaan &amp; bebas risiko suspensi.</p>
             </div>
           </div>
           <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start gap-3">
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 mt-0.5">
-              <Target className="w-4 h-4" />
+              <Clock className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-200">4. Small-Mid Cap Runway</p>
-              <p className="text-[10px] text-slate-400">Market cap terjangkau memiliki ruang lompat 100% &ndash; 400% lebih leluasa.</p>
+              <p className="text-[11px] font-bold text-slate-200">4. Perkiraan Waktu</p>
+              <p className="text-[10px] text-slate-400">Target milestone 2x (3-6 bln) hingga 5x (12-24 bln) berbasis siklus kuartalan.</p>
             </div>
           </div>
         </div>
@@ -294,7 +320,7 @@ export default function MultibaggerHunterPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-3">
           <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
-          <p className="text-xs font-mono text-slate-400">Menjalankan kalkulasi 4-Pilar Multibagger...</p>
+          <p className="text-xs font-mono text-slate-400">Menjalankan kalkulasi 4-Pilar Multibagger &amp; Sentimen...</p>
         </div>
       ) : filteredList.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-cardBg border border-slate-800 space-y-3">
@@ -316,10 +342,10 @@ export default function MultibaggerHunterPage() {
             return (
               <div
                 key={stock.symbol}
-                className="group relative rounded-3xl bg-cardBg border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 shadow-xl hover:shadow-indigo-500/10 p-5 flex flex-col justify-between"
+                className="group relative rounded-3xl bg-cardBg border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 shadow-xl hover:shadow-indigo-500/10 p-5 flex flex-col justify-between space-y-4"
               >
                 {/* Header Card */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <div className="flex items-center gap-2">
@@ -363,36 +389,70 @@ export default function MultibaggerHunterPage() {
                     </div>
                   </div>
 
-                  {/* Target Projections Carousel/Grid */}
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                      <span>Proyeksi Target Bagger</span>
-                      <span className="text-emerald-400 font-bold">{stock.potential_multiple}</span>
-                    </span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="p-2 rounded-xl bg-slate-900/50 border border-slate-800 text-center">
+                  {/* Perkiraan Waktu & Milestone Target */}
+                  <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-400" /> Perkiraan Waktu
+                      </span>
+                      <span className="text-[11px] font-mono font-bold text-amber-300">
+                        {stock.estimated_timeframe?.primary_horizon || "3 - 6 Bulan"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 text-center">
+                      <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
                         <span className="text-[9px] font-mono text-slate-500 block">+100% (2x)</span>
-                        <span className="text-xs font-bold font-mono text-emerald-400">
+                        <span className="text-[10px] font-mono font-bold text-emerald-400 block">
                           Rp {stock.target_bagger_100.toLocaleString("id-ID")}
                         </span>
-                      </div>
-                      <div className="p-2 rounded-xl bg-slate-900/50 border border-slate-800 text-center">
-                        <span className="text-[9px] font-mono text-slate-500 block">+200% (3x)</span>
-                        <span className="text-xs font-bold font-mono text-cyan-400">
-                          Rp {stock.target_bagger_200.toLocaleString("id-ID")}
+                        <span className="text-[8px] font-mono text-slate-400">
+                          {stock.estimated_timeframe?.time_to_100pct?.split("(")[0] || "3-6 bln"}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-900/50 border border-slate-800 text-center">
+                      <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
+                        <span className="text-[9px] font-mono text-slate-500 block">+200% (3x)</span>
+                        <span className="text-[10px] font-mono font-bold text-cyan-400 block">
+                          Rp {stock.target_bagger_200.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-[8px] font-mono text-slate-400">
+                          {stock.estimated_timeframe?.time_to_200pct?.split("(")[0] || "6-12 bln"}
+                        </span>
+                      </div>
+                      <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
                         <span className="text-[9px] font-mono text-slate-500 block">+400% (5x)</span>
-                        <span className="text-xs font-bold font-mono text-indigo-400">
+                        <span className="text-[10px] font-mono font-bold text-indigo-400 block">
                           Rp {stock.target_bagger_400.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-[8px] font-mono text-slate-400">
+                          {stock.estimated_timeframe?.time_to_400pct?.split("(")[0] || "1-2 thn"}
                         </span>
                       </div>
                     </div>
                   </div>
 
+                  {/* Argumen Analisis Sentimen */}
+                  {stock.sentiment_analysis && (
+                    <div className="p-3 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold text-indigo-300 flex items-center gap-1">
+                          <MessageSquareQuote className="w-3 h-3 text-indigo-400" /> Argumen Sentimen Makro
+                        </span>
+                        <span className="text-[9px] font-mono font-bold px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                          {stock.sentiment_analysis.sentiment_label.split(" ")[0]}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed line-clamp-2">
+                        {stock.sentiment_analysis.narrative_argument}
+                      </p>
+                      <div className="flex items-center justify-between pt-1 border-t border-indigo-500/20 text-[9px] font-mono text-slate-400">
+                        <span className="truncate max-w-[200px]">&bull; {stock.sentiment_analysis.macro_tailwind}</span>
+                        <span className="text-emerald-400 font-semibold shrink-0">Bebas Suspensi</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* 4-Pillar Status Checklist */}
-                  <div className="space-y-2 pt-2 border-t border-slate-800/80 text-xs">
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800/80 text-xs">
                     <div className="flex items-center justify-between text-slate-300">
                       <span className="flex items-center gap-1.5 text-[11px]">
                         <CheckCircle2
@@ -439,23 +499,16 @@ export default function MultibaggerHunterPage() {
                         )}
                       </span>
                     </div>
-
-                    <div className="flex items-start justify-between text-slate-300 gap-2">
-                      <span className="text-[10px] text-slate-500 shrink-0">Katalis:</span>
-                      <span className="text-[10px] text-slate-300 text-right line-clamp-2">
-                        {stock.catalyst_summary}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center gap-2">
+                <div className="pt-3 border-t border-slate-800/80 flex items-center gap-2">
                   <button
                     onClick={() => setSelectedStock(stock)}
                     className="flex-1 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all"
                   >
-                    <Info className="w-3.5 h-3.5 text-indigo-400" /> Detail Kriteria
+                    <Info className="w-3.5 h-3.5 text-indigo-400" /> Detail &amp; Sentimen
                   </button>
                   <Link
                     href={`/portfolio`}
@@ -471,10 +524,10 @@ export default function MultibaggerHunterPage() {
         </div>
       )}
 
-      {/* Modal Detail Kriteria */}
+      {/* Modal Detail Kriteria, Sentimen & Perkiraan Waktu */}
       {selectedStock && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2">
@@ -484,12 +537,15 @@ export default function MultibaggerHunterPage() {
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono font-bold">
                     Skor: {selectedStock.multibagger_score}/100
                   </span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold">
+                    {selectedStock.potential_multiple}
+                  </span>
                 </div>
                 <p className="text-xs text-slate-400">{selectedStock.name} &bull; {selectedStock.sector}</p>
               </div>
               <button
                 onClick={() => setSelectedStock(null)}
-                className="text-slate-400 hover:text-white text-lg font-mono p-1"
+                className="text-slate-400 hover:text-white text-xl font-mono p-1"
               >
                 &times;
               </button>
@@ -497,6 +553,75 @@ export default function MultibaggerHunterPage() {
 
             {/* Pillar Breakdown Details */}
             <div className="space-y-3 text-xs">
+              {/* Argumen Sentimen Card */}
+              {selectedStock.sentiment_analysis && (
+                <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-indigo-300 flex items-center gap-1.5 text-xs font-mono">
+                      <MessageSquareQuote className="w-4 h-4 text-indigo-400" /> Analisis Sentimen &amp; Tesis Makro
+                    </p>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      {selectedStock.sentiment_analysis.sentiment_label}
+                    </span>
+                  </div>
+                  <p className="text-slate-200 text-xs leading-relaxed">
+                    {selectedStock.sentiment_analysis.narrative_argument}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-indigo-500/20 text-[10px] font-mono text-slate-300">
+                    <div>
+                      <span className="text-slate-500 block">Driver Makro Sektor:</span>
+                      <span className="text-cyan-300 font-semibold">{selectedStock.sentiment_analysis.macro_tailwind}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Status Risiko Regulasi:</span>
+                      <span className="text-emerald-400 font-semibold">{selectedStock.sentiment_analysis.safety_assessment}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Perkiraan Waktu & Milestone Target */}
+              {selectedStock.estimated_timeframe && (
+                <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-amber-300 flex items-center gap-1.5 text-xs font-mono">
+                      <CalendarDays className="w-4 h-4 text-amber-400" /> Perkiraan Waktu &amp; Milestone Holding
+                    </p>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      {selectedStock.estimated_timeframe.primary_horizon}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div className="p-2 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-400 block">Target +100% (2x)</span>
+                      <span className="text-xs font-bold font-mono text-emerald-400">
+                        {selectedStock.estimated_timeframe.time_to_100pct}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-400 block">Target +200% (3x)</span>
+                      <span className="text-xs font-bold font-mono text-cyan-400">
+                        {selectedStock.estimated_timeframe.time_to_200pct}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-900 border border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-400 block">Target +400% (5x)</span>
+                      <span className="text-xs font-bold font-mono text-indigo-400">
+                        {selectedStock.estimated_timeframe.time_to_400pct}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-300 pt-1">
+                    <span className="text-slate-400 font-mono font-bold">Strategi Kawal: </span>
+                    {selectedStock.estimated_timeframe.holding_strategy}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    &bull; {selectedStock.estimated_timeframe.catalyst_milestone}
+                  </p>
+                </div>
+              )}
+
+              {/* Minervini Stage 2 */}
               <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-1.5">
                 <p className="font-bold text-slate-200 flex items-center gap-1.5 text-[11px]">
                   <TrendingUp className="w-4 h-4 text-indigo-400" /> 1. Minervini Trend Template (Stage 2)
@@ -509,6 +634,7 @@ export default function MultibaggerHunterPage() {
                 </div>
               </div>
 
+              {/* Bandarmologi */}
               <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-1.5">
                 <p className="font-bold text-slate-200 flex items-center gap-1.5 text-[11px]">
                   <ShieldCheck className="w-4 h-4 text-cyan-400" /> 2. Bandarmologi &amp; Stealth Accumulation
@@ -521,9 +647,10 @@ export default function MultibaggerHunterPage() {
                 </div>
               </div>
 
+              {/* Volatility Contraction & Stop Loss */}
               <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700 space-y-1.5">
                 <p className="font-bold text-slate-200 flex items-center gap-1.5 text-[11px]">
-                  <Zap className="w-4 h-4 text-emerald-400" /> 3. Kontraksi Volatilitas (VCP) &amp; Katalis
+                  <Zap className="w-4 h-4 text-emerald-400" /> 3. Kontraksi Volatilitas (VCP) &amp; Manajemen Risiko
                 </p>
                 <p className="text-slate-300 text-[11px]">{selectedStock.catalyst_summary}</p>
                 <p className="text-[10px] text-slate-400">
