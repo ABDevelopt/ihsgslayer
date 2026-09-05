@@ -2,350 +2,475 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================================
+   IHSG SLAYER — DESIGN TOKEN FRAMEWORK v2.0
+   Satu sumber kebenaran untuk semua warna tema.
+   Prinsip: CSS variable token → semantic class → komponen pakai semantic class.
+
+   DARK  = nilai di :root (default)
+   LIGHT = nilai di html.light (override otomatis saat toggle)
+   Komponen tidak perlu tahu mode apa yang aktif.
+   ========================================================================= */
+
+/* =========================================================================
+   LAYER 1: CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   ========================================================================= */
+
 :root {
-  --background: #0b0f17;
-  --foreground: #f8fafc;
+  /* --- Surface / Background --- */
+  --bg-page:      #0b0f17;    /* Latar halaman utama */
+  --bg-surface:   #111827;    /* Card, Panel */
+  --bg-elevated:  #1a2030;    /* Elevated card, active state */
+  --bg-muted:     #1f2937;    /* Input, muted section */
+  --bg-subtle:    #374151;    /* Hover state */
+  --bg-sidebar:   #080c14;    /* Sidebar khusus */
+
+  /* --- Border --- */
+  --border-default:  #1f2937;
+  --border-subtle:   #374151;
+  --border-strong:   #4b5563;
+
+  /* --- Text --- */
+  --text-primary:    #f8fafc;
+  --text-secondary:  #e2e8f0;
+  --text-tertiary:   #cbd5e1;
+  --text-muted:      #94a3b8;
+  --text-faint:      #64748b;
+  --text-disabled:   #475569;
+
+  /* --- Overlay --- */
+  --overlay-bg:  rgba(0, 0, 0, 0.75);
+
+  /* --- Shadow --- */
+  --shadow-card:   0 1px 3px 0 rgba(0,0,0,0.30), 0 1px 2px -1px rgba(0,0,0,0.20);
+  --shadow-modal:  0 25px 50px -12px rgba(0,0,0,0.60);
+
+  /* --- Semantic: Emerald (Bullish / Profit) --- */
+  --emerald-bg:      rgba(16,185,129,0.12);
+  --emerald-bg-soft: rgba(16,185,129,0.07);
+  --emerald-border:  rgba(16,185,129,0.30);
+  --emerald-text:    #34d399;
+  --emerald-text-sm: #6ee7b7;
+
+  /* --- Semantic: Rose (Bearish / Loss) --- */
+  --rose-bg:      rgba(244,63,94,0.12);
+  --rose-bg-soft: rgba(244,63,94,0.07);
+  --rose-border:  rgba(244,63,94,0.30);
+  --rose-text:    #fb7185;
+  --rose-text-sm: #fda4af;
+
+  /* --- Semantic: Amber (Warning / Wait) --- */
+  --amber-bg:      rgba(245,158,11,0.12);
+  --amber-bg-soft: rgba(245,158,11,0.07);
+  --amber-border:  rgba(245,158,11,0.30);
+  --amber-text:    #fbbf24;
+  --amber-text-sm: #fde68a;
+
+  /* --- Semantic: Indigo (Brand / Analytics) --- */
+  --indigo-bg:      rgba(99,102,241,0.12);
+  --indigo-bg-soft: rgba(99,102,241,0.07);
+  --indigo-border:  rgba(99,102,241,0.30);
+  --indigo-text:    #818cf8;
+  --indigo-text-sm: #a5b4fc;
+
+  /* --- Semantic: Cyan (Flow / Liquidity) --- */
+  --cyan-bg:      rgba(6,182,212,0.12);
+  --cyan-bg-soft: rgba(6,182,212,0.07);
+  --cyan-border:  rgba(6,182,212,0.30);
+  --cyan-text:    #22d3ee;
+  --cyan-text-sm: #67e8f9;
+
+  /* --- Semantic: Purple (AI / Multi-TF) --- */
+  --purple-bg:      rgba(168,85,247,0.12);
+  --purple-bg-soft: rgba(168,85,247,0.07);
+  --purple-border:  rgba(168,85,247,0.30);
+  --purple-text:    #c084fc;
+  --purple-text-sm: #d8b4fe;
+
+  /* --- Semantic: Blue (Signals) --- */
+  --blue-bg:      rgba(59,130,246,0.12);
+  --blue-bg-soft: rgba(59,130,246,0.07);
+  --blue-border:  rgba(59,130,246,0.30);
+  --blue-text:    #60a5fa;
+  --blue-text-sm: #93c5fd;
+
+  /* --- Semantic: Sky --- */
+  --sky-bg:     rgba(14,165,233,0.12);
+  --sky-border: rgba(14,165,233,0.30);
+  --sky-text:   #38bdf8;
 }
 
-/* ========================================================================= */
-/* BASE THEME: DARK MODE (DEFAULT)                                           */
-/* ========================================================================= */
-body {
-  background-color: #0b0f17;
-  color: #f8fafc;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
-}
+/* =========================================================================
+   LIGHT MODE TOKEN OVERRIDE
+   Semua komponen yang pakai token di atas OTOMATIS berganti tampilan.
+   ========================================================================= */
 
-/* Custom Scrollbars (Dark) */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0b0f17;
-}
-::-webkit-scrollbar-thumb {
-  background: #1f2937;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #374151;
-}
-
-.glass-panel {
-  background: rgba(17, 24, 39, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(31, 41, 55, 0.9);
-}
-
-.glass-panel-glow {
-  background: rgba(17, 24, 39, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.1);
-}
-
-/* ========================================================================= */
-/* THEME STYLE KHUSUS: MODE TERANG (LIGHT MODE)                              */
-/* Warna Soft & Calming, Kontras Tinggi (WCAG AA/AAA), Nyaman di Mata        */
-/* ========================================================================= */
 html.light {
   color-scheme: light;
+
+  /* --- Surface / Background (soft, calming, anti-glare) --- */
+  --bg-page:      #f1f5f9;
+  --bg-surface:   #ffffff;
+  --bg-elevated:  #f8fafc;
+  --bg-muted:     #f1f5f9;
+  --bg-subtle:    #e2e8f0;
+  --bg-sidebar:   #ffffff;
+
+  /* --- Border --- */
+  --border-default:  #e2e8f0;
+  --border-subtle:   #f1f5f9;
+  --border-strong:   #cbd5e1;
+
+  /* --- Text (deep charcoal, WCAG AAA) --- */
+  --text-primary:    #0f172a;
+  --text-secondary:  #1e293b;
+  --text-tertiary:   #334155;
+  --text-muted:      #64748b;
+  --text-faint:      #94a3b8;
+  --text-disabled:   #cbd5e1;
+
+  /* --- Overlay --- */
+  --overlay-bg: rgba(0,0,0,0.50);
+
+  /* --- Shadow (soft, non-harsh) --- */
+  --shadow-card:   0 1px 3px 0 rgba(15,23,42,0.06), 0 1px 2px -1px rgba(15,23,42,0.04);
+  --shadow-modal:  0 20px 40px -8px rgba(15,23,42,0.15);
+
+  /* --- Semantic: Emerald (deep forest 8.5:1 contrast) --- */
+  --emerald-bg:      #ecfdf5;
+  --emerald-bg-soft: #f0fdf4;
+  --emerald-border:  #a7f3d0;
+  --emerald-text:    #047857;
+  --emerald-text-sm: #065f46;
+
+  /* --- Semantic: Rose (wine rose 7.8:1) --- */
+  --rose-bg:      #fff1f2;
+  --rose-bg-soft: #fff5f6;
+  --rose-border:  #fecdd3;
+  --rose-text:    #be123c;
+  --rose-text-sm: #9f1239;
+
+  /* --- Semantic: Amber (dark amber 7.2:1) --- */
+  --amber-bg:      #fffbeb;
+  --amber-bg-soft: #fefce8;
+  --amber-border:  #fde68a;
+  --amber-text:    #b45309;
+  --amber-text-sm: #92400e;
+
+  /* --- Semantic: Indigo (royal slate 8.4:1) --- */
+  --indigo-bg:      #eef2ff;
+  --indigo-bg-soft: #f0f4ff;
+  --indigo-border:  #c7d2fe;
+  --indigo-text:    #4338ca;
+  --indigo-text-sm: #3730a3;
+
+  /* --- Semantic: Cyan (ocean teal 7.6:1) --- */
+  --cyan-bg:      #f0fdfa;
+  --cyan-bg-soft: #f0fdfe;
+  --cyan-border:  #99f6e4;
+  --cyan-text:    #0f766e;
+  --cyan-text-sm: #115e59;
+
+  /* --- Semantic: Purple (deep iris 7.9:1) --- */
+  --purple-bg:      #f5f3ff;
+  --purple-bg-soft: #faf5ff;
+  --purple-border:  #ddd6fe;
+  --purple-text:    #6d28d9;
+  --purple-text-sm: #5b21b6;
+
+  /* --- Semantic: Blue (cobalt 8.1:1) --- */
+  --blue-bg:      #eff6ff;
+  --blue-bg-soft: #f0f7ff;
+  --blue-border:  #bfdbfe;
+  --blue-text:    #1d4ed8;
+  --blue-text-sm: #1e40af;
+
+  /* --- Semantic: Sky --- */
+  --sky-bg:     #f0f9ff;
+  --sky-border: #bae6fd;
+  --sky-text:   #0369a1;
 }
 
-html.light body {
-  background-color: #f8fafc !important;
-  color: #1e293b !important;
+/* =========================================================================
+   LAYER 2: BASE STYLES — semua referensi ke token
+   ========================================================================= */
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Scrollbars (Light Soft Slate) */
-html.light ::-webkit-scrollbar-track {
-  background: #f1f5f9 !important;
-}
-html.light ::-webkit-scrollbar-thumb {
-  background: #cbd5e1 !important;
-  border-radius: 4px;
-}
-html.light ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8 !important;
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* =========================================================================
+   LAYER 3: SEMANTIC COMPONENT CLASSES (@layer components)
+   Komponen memakai class ini. Tidak ada warna hardcode di sini.
+   ========================================================================= */
+
+@layer components {
+
+  /* === Layout Surfaces === */
+  .pg-page     { background-color: var(--bg-page); color: var(--text-primary); }
+  .pg-surface  { background-color: var(--bg-surface); border-color: var(--border-default); box-shadow: var(--shadow-card); }
+  .pg-elevated { background-color: var(--bg-elevated); border-color: var(--border-subtle); }
+  .pg-muted    { background-color: var(--bg-muted); border-color: var(--border-default); }
+  .pg-sidebar  { background-color: var(--bg-sidebar); border-color: var(--border-default); }
+
+  /* === Modal / Overlay === */
+  .pg-modal-overlay { background-color: var(--overlay-bg); backdrop-filter: blur(8px); }
+  .pg-modal { background-color: var(--bg-surface); border-color: var(--border-default); box-shadow: var(--shadow-modal); }
+
+  /* === Header === */
+  .pg-header {
+    background-color: var(--bg-surface);
+    border-color: var(--border-default);
+    backdrop-filter: blur(12px);
+  }
+
+  /* === Text Helpers === */
+  .pg-text        { color: var(--text-primary); }
+  .pg-text-2      { color: var(--text-secondary); }
+  .pg-text-3      { color: var(--text-tertiary); }
+  .pg-text-muted  { color: var(--text-muted); }
+  .pg-text-faint  { color: var(--text-faint); }
+
+  /* === Interactive: Input === */
+  .pg-input {
+    background-color: var(--bg-muted);
+    border-color: var(--border-default);
+    color: var(--text-primary);
+  }
+  .pg-input::placeholder { color: var(--text-faint); }
+  .pg-input:focus { outline: none; border-color: var(--indigo-text); box-shadow: 0 0 0 3px var(--indigo-bg); }
+
+  /* === Interactive: Button === */
+  .pg-btn { background-color: var(--bg-muted); border-color: var(--border-subtle); color: var(--text-tertiary); transition: all 0.15s ease; }
+  .pg-btn:hover { background-color: var(--bg-subtle); border-color: var(--border-strong); color: var(--text-primary); }
+
+  .pg-btn-ghost { background: transparent; border-color: transparent; color: var(--text-muted); }
+  .pg-btn-ghost:hover { background-color: var(--bg-muted); color: var(--text-primary); }
+
+  /* === Table === */
+  .pg-table-header { background-color: var(--bg-elevated); color: var(--text-muted); border-color: var(--border-default); }
+  .pg-table-row { border-color: var(--border-subtle); color: var(--text-secondary); }
+  .pg-table-row:hover { background-color: var(--bg-elevated); }
+
+  /* === Divider === */
+  .pg-divider { border-color: var(--border-default); }
+
+  /* === Semantic Badges === */
+  .pg-badge-emerald { background-color: var(--emerald-bg); border-color: var(--emerald-border); color: var(--emerald-text); }
+  .pg-badge-rose    { background-color: var(--rose-bg);    border-color: var(--rose-border);    color: var(--rose-text); }
+  .pg-badge-amber   { background-color: var(--amber-bg);   border-color: var(--amber-border);   color: var(--amber-text); }
+  .pg-badge-indigo  { background-color: var(--indigo-bg);  border-color: var(--indigo-border);  color: var(--indigo-text); }
+  .pg-badge-cyan    { background-color: var(--cyan-bg);    border-color: var(--cyan-border);    color: var(--cyan-text); }
+  .pg-badge-purple  { background-color: var(--purple-bg);  border-color: var(--purple-border);  color: var(--purple-text); }
+  .pg-badge-blue    { background-color: var(--blue-bg);    border-color: var(--blue-border);    color: var(--blue-text); }
+  .pg-badge-sky     { background-color: var(--sky-bg);     border-color: var(--sky-border);     color: var(--sky-text); }
+  .pg-badge-neutral { background-color: var(--bg-muted);   border-color: var(--border-subtle);  color: var(--text-muted); }
+
+  /* === Semantic Text Colors === */
+  .pg-emerald { color: var(--emerald-text); }
+  .pg-rose    { color: var(--rose-text); }
+  .pg-amber   { color: var(--amber-text); }
+  .pg-indigo  { color: var(--indigo-text); }
+  .pg-cyan    { color: var(--cyan-text); }
+  .pg-purple  { color: var(--purple-text); }
+  .pg-blue    { color: var(--blue-text); }
+  .pg-sky     { color: var(--sky-text); }
+
+  /* === Nav Item === */
+  .pg-nav-item { color: var(--text-muted); border-radius: 0.5rem; transition: all 0.15s ease; }
+  .pg-nav-item:hover { background-color: var(--bg-muted); color: var(--text-primary); }
+  .pg-nav-item.active { background-color: var(--bg-subtle); color: var(--text-primary); font-weight: 600; }
 }
 
-/* Core Container & Card Overrides */
-html.light .bg-darkBg {
-  background-color: #f8fafc !important;
+/* =========================================================================
+   LAYER 4: GLOBAL TAILWIND CLASS REMAP
+   Menjembatani komponen page-level yang menggunakan Tailwind classes.
+   Token CSS Variables dipakai — TIDAK ada !important hardcoded warna.
+   ========================================================================= */
+
+/* Custom named colors */
+.bg-darkBg,
+.bg-\[#0b0f17\]      { background-color: var(--bg-page) !important; }
+.bg-cardBg,
+.bg-\[#111827\]      { background-color: var(--bg-surface) !important; }
+.bg-\[#0b0f19\],
+.bg-\[#080c14\]      { background-color: var(--bg-sidebar) !important; }
+.bg-\[#1f2937\]      { background-color: var(--bg-muted) !important; }
+.border-cardBorder,
+.border-\[#1f2937\]  { border-color: var(--border-default) !important; }
+
+/* Slate backgrounds */
+.bg-slate-950,
+.bg-slate-950\/80,
+.bg-slate-950\/60     { background-color: var(--bg-page) !important; }
+
+.bg-slate-900,
+.bg-slate-900\/90,
+.bg-slate-900\/80,
+.bg-slate-900\/70,
+.bg-slate-900\/60,
+.bg-slate-900\/50,
+.bg-slate-900\/40     { background-color: var(--bg-muted) !important; }
+
+.bg-slate-800,
+.bg-slate-800\/90,
+.bg-slate-800\/80,
+.bg-slate-800\/70,
+.bg-slate-800\/60,
+.bg-slate-800\/50,
+.bg-slate-800\/40,
+.bg-slate-800\/30,
+.bg-slate-800\/20     { background-color: var(--bg-subtle) !important; }
+
+/* Borders */
+.border-slate-900,
+.border-slate-800,
+.border-slate-800\/80,
+.border-slate-800\/70,
+.border-slate-800\/60,
+.border-slate-800\/50,
+.border-slate-800\/40,
+.border-slate-700,
+.border-slate-700\/70,
+.border-slate-700\/60,
+.border-slate-700\/50  { border-color: var(--border-default) !important; }
+
+.border-slate-600      { border-color: var(--border-subtle) !important; }
+
+/* Text */
+.text-white,
+.text-slate-100,
+.text-slate-200,
+.text-gray-100,
+.text-gray-200         { color: var(--text-primary) !important; }
+
+.text-slate-300,
+.text-gray-300         { color: var(--text-secondary) !important; }
+
+.text-slate-400,
+.text-gray-400         { color: var(--text-muted) !important; }
+
+.text-slate-500,
+.text-slate-600,
+.text-gray-500         { color: var(--text-faint) !important; }
+
+/* Semantic color badges & backgrounds */
+.bg-emerald-500\/25, .bg-emerald-500\/20, .bg-emerald-500\/15,
+.bg-emerald-500\/10, .bg-emerald-500\/5,
+.bg-emerald-950\/40,  .bg-emerald-900\/20,
+.bg-green-500\/20, .bg-green-500\/10  {
+  background-color: var(--emerald-bg) !important;
+  border-color: var(--emerald-border) !important;
+}
+.text-emerald-400, .text-emerald-300, .text-emerald-500,
+.text-green-400, .text-green-500      { color: var(--emerald-text) !important; }
+
+.bg-rose-500\/25, .bg-rose-500\/20, .bg-rose-500\/15,
+.bg-rose-500\/10, .bg-rose-500\/5,
+.bg-rose-950\/40, .bg-rose-900\/20,
+.bg-red-500\/20, .bg-red-500\/15, .bg-red-900\/20 {
+  background-color: var(--rose-bg) !important;
+  border-color: var(--rose-border) !important;
+}
+.text-rose-400, .text-rose-300, .text-rose-500,
+.text-red-400, .text-red-500          { color: var(--rose-text) !important; }
+
+.bg-amber-500\/25, .bg-amber-500\/20, .bg-amber-500\/15,
+.bg-amber-500\/10, .bg-amber-500\/5,
+.bg-amber-950\/40, .bg-amber-900\/20,
+.bg-yellow-500\/20, .bg-yellow-500\/10 {
+  background-color: var(--amber-bg) !important;
+  border-color: var(--amber-border) !important;
+}
+.text-amber-400, .text-amber-300, .text-amber-500,
+.text-yellow-400, .text-yellow-500, .text-yellow-600 { color: var(--amber-text) !important; }
+
+.bg-indigo-500\/25, .bg-indigo-500\/20, .bg-indigo-500\/15,
+.bg-indigo-500\/10, .bg-indigo-500\/5,
+.bg-indigo-950\/40, .bg-indigo-900\/20 {
+  background-color: var(--indigo-bg) !important;
+  border-color: var(--indigo-border) !important;
+}
+.text-indigo-400, .text-indigo-300, .text-indigo-500 { color: var(--indigo-text) !important; }
+
+.bg-cyan-500\/25, .bg-cyan-500\/20, .bg-cyan-500\/15,
+.bg-cyan-500\/10, .bg-cyan-500\/5,
+.bg-cyan-950\/40, .bg-cyan-900\/20,
+.bg-teal-500\/20, .bg-teal-500\/10 {
+  background-color: var(--cyan-bg) !important;
+  border-color: var(--cyan-border) !important;
+}
+.text-cyan-400, .text-cyan-300, .text-cyan-500,
+.text-teal-400, .text-teal-500        { color: var(--cyan-text) !important; }
+
+.bg-purple-500\/25, .bg-purple-500\/20, .bg-purple-500\/15,
+.bg-purple-500\/10, .bg-purple-500\/5,
+.bg-purple-950\/40, .bg-purple-900\/20,
+.bg-violet-500\/20, .bg-violet-500\/10 {
+  background-color: var(--purple-bg) !important;
+  border-color: var(--purple-border) !important;
+}
+.text-purple-400, .text-purple-300, .text-purple-500,
+.text-violet-400, .text-violet-500    { color: var(--purple-text) !important; }
+
+.bg-blue-500\/25, .bg-blue-500\/20, .bg-blue-500\/15,
+.bg-blue-500\/10, .bg-blue-500\/5,
+.bg-blue-950\/40, .bg-blue-900\/20 {
+  background-color: var(--blue-bg) !important;
+  border-color: var(--blue-border) !important;
+}
+.text-blue-400, .text-blue-300, .text-blue-500 { color: var(--blue-text) !important; }
+
+.bg-sky-500\/20, .bg-sky-500\/15, .bg-sky-500\/10, .bg-sky-900\/20 {
+  background-color: var(--sky-bg) !important;
+  border-color: var(--sky-border) !important;
+}
+.text-sky-400, .text-sky-300, .text-sky-500 { color: var(--sky-text) !important; }
+
+/* Forms */
+input, select, textarea {
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--indigo-text);
+  box-shadow: 0 0 0 3px var(--indigo-bg);
 }
 
-html.light .bg-cardBg {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04) !important;
+/* Tables */
+table th { background-color: var(--bg-elevated); color: var(--text-muted); border-color: var(--border-default); }
+table td { border-color: var(--border-subtle); color: var(--text-secondary); }
+tr:hover  { background-color: var(--bg-elevated); }
+
+/* Glass panels */
+.glass-panel {
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-color: var(--border-default);
+}
+.glass-panel-glow {
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-color: var(--emerald-border);
+  box-shadow: 0 0 20px -5px var(--emerald-bg);
 }
 
-html.light header {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03) !important;
-}
+/* Gradient border normalization */
+.bg-gradient-to-br,
+.bg-gradient-to-r,
+.bg-gradient-to-b { border-color: var(--border-default); }
 
-html.light aside {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light aside .bg-\[\#0b0f19\]\/90,
-html.light aside .bg-\[\#0b0f19\] {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light footer {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* Dark Panels mapped to Soft Muted Pastels in Light Mode */
-html.light .bg-slate-900,
-html.light .bg-slate-900\/80,
-html.light .bg-slate-900\/70,
-html.light .bg-slate-900\/60,
-html.light .bg-slate-900\/50,
-html.light .bg-slate-950,
-html.light .bg-slate-950\/80 {
-  background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light .bg-slate-800,
-html.light .bg-slate-800\/80,
-html.light .bg-slate-800\/60,
-html.light .bg-slate-800\/40,
-html.light .bg-slate-800\/20 {
-  background-color: #e2e8f0 !important;
-}
-
-/* Border normalization */
-html.light .border-slate-800,
-html.light .border-slate-800\/80,
-html.light .border-slate-800\/60,
-html.light .border-slate-800\/40,
-html.light .border-slate-700,
-html.light .border-slate-700\/60,
-html.light .border-cardBorder {
-  border-color: #e2e8f0 !important;
-}
-
-/* Text readability in Light Mode (Deep Slate charcoal for high contrast without harsh pure black) */
-html.light .text-slate-100,
-html.light .text-slate-200,
-html.light .text-gray-100,
-html.light .text-gray-200,
-html.light .text-white {
-  color: #0f172a !important;
-}
-
-html.light .text-slate-300,
-html.light .text-gray-300 {
-  color: #334155 !important;
-}
-
-html.light .text-slate-400,
-html.light .text-gray-400 {
-  color: #64748b !important;
-}
-
-html.light .text-slate-500,
-html.light .text-gray-500 {
-  color: #64748b !important;
-}
-
-html.light .text-slate-600 {
-  color: #94a3b8 !important;
-}
-
-/* Gradient Cards mapping */
-html.light .bg-gradient-to-br,
-html.light .bg-gradient-to-r,
-html.light .bg-gradient-to-b {
-  border-color: #e2e8f0 !important;
-}
-
-/* Glass Panels in Light Mode */
-html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03) !important;
-}
-
-/* ========================================================================= */
-/* SOFT PASTEL BADGES WITH DEEP CRISP TEXT (HIGH CONTRAST, GENTLE ON EYES)    */
-/* ========================================================================= */
-
-/* 1. Emerald / Bullish / Profit */
-html.light .bg-emerald-500\/25,
-html.light .bg-emerald-500\/20,
-html.light .bg-emerald-500\/15,
-html.light .bg-emerald-500\/10,
-html.light .bg-emerald-950\/40,
-html.light .bg-emerald-900\/20 {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-}
-html.light .text-emerald-400,
-html.light .text-emerald-500,
-html.light .text-emerald-300,
-html.light .text-green-400,
-html.light .text-green-500 {
-  color: #047857 !important; /* Deep forest emerald, 8.5:1 contrast on light bg */
-}
-
-/* 2. Rose / Bearish / Loss */
-html.light .bg-rose-500\/25,
-html.light .bg-rose-500\/20,
-html.light .bg-rose-500\/15,
-html.light .bg-rose-500\/10,
-html.light .bg-rose-950\/40,
-html.light .bg-rose-900\/20,
-html.light .bg-red-500\/20,
-html.light .bg-red-500\/15,
-html.light .bg-red-900\/20 {
-  background-color: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-}
-html.light .text-rose-400,
-html.light .text-rose-500,
-html.light .text-rose-300,
-html.light .text-red-400,
-html.light .text-red-500 {
-  color: #be123c !important; /* Rich wine rose, 7.8:1 contrast */
-}
-
-/* 3. Amber / Warning / Neutral */
-html.light .bg-amber-500\/25,
-html.light .bg-amber-500\/20,
-html.light .bg-amber-500\/15,
-html.light .bg-amber-500\/10,
-html.light .bg-amber-950\/40,
-html.light .bg-amber-900\/20,
-html.light .bg-yellow-500\/20,
-html.light .bg-yellow-500\/10 {
-  background-color: #fffbeb !important;
-  border-color: #fde68a !important;
-}
-html.light .text-amber-400,
-html.light .text-amber-500,
-html.light .text-amber-300,
-html.light .text-yellow-400,
-html.light .text-yellow-500,
-html.light .text-yellow-600 {
-  color: #b45309 !important; /* Warm dark honey amber, 7.2:1 contrast */
-}
-
-/* 4. Indigo / Brand / Analytics */
-html.light .bg-indigo-500\/25,
-html.light .bg-indigo-500\/20,
-html.light .bg-indigo-500\/15,
-html.light .bg-indigo-500\/10,
-html.light .bg-indigo-950\/40,
-html.light .bg-indigo-900\/20 {
-  background-color: #eef2ff !important;
-  border-color: #c7d2fe !important;
-}
-html.light .text-indigo-400,
-html.light .text-indigo-500,
-html.light .text-indigo-300 {
-  color: #4338ca !important; /* Deep soft indigo, 8.4:1 contrast */
-}
-
-/* 5. Cyan / Teal / Flow */
-html.light .bg-cyan-500\/25,
-html.light .bg-cyan-500\/20,
-html.light .bg-cyan-500\/15,
-html.light .bg-cyan-500\/10,
-html.light .bg-cyan-950\/40,
-html.light .bg-cyan-900\/20,
-html.light .bg-teal-500\/20,
-html.light .bg-teal-500\/10 {
-  background-color: #f0fdfa !important;
-  border-color: #99f6e4 !important;
-}
-html.light .text-cyan-400,
-html.light .text-cyan-500,
-html.light .text-cyan-300,
-html.light .text-teal-400,
-html.light .text-teal-500 {
-  color: #0f766e !important; /* Deep ocean teal, 7.6:1 contrast */
-}
-
-/* 6. Purple / Violet / AI */
-html.light .bg-purple-500\/25,
-html.light .bg-purple-500\/20,
-html.light .bg-purple-500\/15,
-html.light .bg-purple-500\/10,
-html.light .bg-purple-950\/40,
-html.light .bg-purple-900\/20,
-html.light .bg-violet-500\/20,
-html.light .bg-violet-500\/10 {
-  background-color: #f5f3ff !important;
-  border-color: #ddd6fe !important;
-}
-html.light .text-purple-400,
-html.light .text-purple-500,
-html.light .text-purple-300,
-html.light .text-violet-400,
-html.light .text-violet-500 {
-  color: #6d28d9 !important; /* Rich deep iris violet, 7.9:1 contrast */
-}
-
-/* 7. Blue / Signals */
-html.light .bg-blue-500\/25,
-html.light .bg-blue-500\/20,
-html.light .bg-blue-500\/15,
-html.light .bg-blue-500\/10,
-html.light .bg-blue-950\/40,
-html.light .bg-blue-900\/20 {
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
-}
-html.light .text-blue-400,
-html.light .text-blue-500,
-html.light .text-blue-300 {
-  color: #1d4ed8 !important; /* Deep cobalt blue, 8.1:1 contrast */
-}
-
-/* Inputs and Selects in Light Mode */
-html.light input,
-html.light select,
-html.light textarea {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-
-html.light input:focus,
-html.light select:focus,
-html.light textarea:focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
-}
-
-html.light input::placeholder,
-html.light textarea::placeholder {
-  color: #94a3b8 !important;
-}
-
-/* Tables in Light Mode */
-html.light table th {
-  background-color: #f8fafc !important;
-  color: #475569 !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light table td {
-  border-color: #f1f5f9 !important;
-}
-
-html.light tr:hover {
-  background-color: #f1f5f9 !important;
-}
 

@@ -171,7 +171,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
       <aside
         className={cn(
-          "fixed top-0 left-0 bottom-0 z-50 bg-[#0b0f19] border-r border-slate-800/80 flex flex-col justify-between transition-all duration-300 ease-in-out lg:translate-x-0 select-none shadow-2xl",
+          "fixed top-0 left-0 bottom-0 z-50 pg-sidebar border-r pg-divider flex flex-col justify-between transition-all duration-300 ease-in-out lg:translate-x-0 select-none shadow-2xl",
           isCollapsed ? "w-20" : "w-72",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
@@ -180,7 +180,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
         <div className="flex flex-col flex-1 min-h-0">
           {/* Brand Header */}
           <div className={cn(
-            "h-16 border-b border-slate-800/70 flex items-center shrink-0 bg-[#0b0f19]/90 transition-all",
+            "h-16 border-b pg-divider flex items-center shrink-0 pg-sidebar transition-all",
             isCollapsed ? "justify-center px-2" : "justify-between px-5"
           )}>
             <Link
@@ -218,7 +218,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                 {isCollapsed ? (
                   <div className="my-2 border-t border-slate-800/80 mx-2" />
                 ) : (
-                  <div className="px-2.5 pb-1 text-[10px] font-semibold text-slate-500 uppercase tracking-widest font-mono flex items-center gap-1.5">
+                  <div className="px-2.5 pb-1 text-[10px] font-semibold pg-text-faint uppercase tracking-widest font-mono flex items-center gap-1.5">
                     <span>{sec.sectionTitle}</span>
                   </div>
                 )}
@@ -244,8 +244,8 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                           "group relative flex items-center rounded-lg text-xs transition-all duration-150",
                           isCollapsed ? "justify-center p-2.5" : "justify-between px-2.5 py-2",
                           isActive
-                            ? "bg-slate-800/90 text-white font-semibold shadow-sm shadow-black/20"
-                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 font-normal"
+                            ? "bg-subtle pg-text font-semibold shadow-sm shadow-black/20"
+                            : "pg-text-muted hover:pg-text hover:bg-muted font-normal"
                         )}
                       >
                         {/* Active Left Indicator Bar */}
@@ -260,11 +260,11 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                                 "w-4 h-4 shrink-0 transition-colors duration-150",
                                 isActive
                                   ? "text-emerald-400"
-                                  : "text-slate-500 group-hover:text-slate-300"
+                                  : "pg-text-faint group-hover:pg-text-3"
                               )}
                             />
                             {isCollapsed && item.chip && (
-                              <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-[#0b0f19]" />
+                              <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-sidebar" />
                             )}
                           </div>
                           {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -283,7 +283,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
                         {/* Collapsed Hover Tooltip */}
                         {isCollapsed && (
-                          <div className="hidden group-hover:flex absolute left-full ml-3 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-50 text-xs font-mono font-bold text-slate-100 whitespace-nowrap items-center gap-2 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+                          <div className="hidden group-hover:flex absolute left-full ml-3 px-3 py-1.5 rounded-xl pg-surface border pg-divider shadow-2xl z-50 text-xs font-mono font-bold pg-text whitespace-nowrap items-center gap-2 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
                             <span>{item.label}</span>
                             {item.chip && (
                               <span
@@ -306,8 +306,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           </nav>
         </div>
 
-        {/* Footer Status Panel */}
-        <div className="p-3 border-t border-slate-800/70 bg-[#080c14]/90 shrink-0">
+        <div className="p-3 border-t pg-divider pg-sidebar shrink-0">
           {isCollapsed ? (
             <div className="flex flex-col items-center gap-2 py-1">
               <div className="relative flex items-center justify-center p-1" title="Feed BEI Aktif (350+ Emiten)">
@@ -316,23 +315,23 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
               </div>
             </div>
           ) : (
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/60 flex items-center justify-between">
+            <div className="p-2.5 rounded-lg pg-muted border pg-divider flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="relative flex items-center justify-center">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-slate-200 font-mono leading-none">
+                  <span className="text-[10px] font-bold pg-text-2 font-mono leading-none">
                     FEED AKTIF
                   </span>
-                  <span className="text-[9px] text-slate-500 font-mono mt-0.5">
+                  <span className="text-[9px] pg-text-faint font-mono mt-0.5">
                     BEI / IDX Live
                   </span>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                <span className="text-[10px] font-mono pg-badge-emerald font-bold px-1.5 py-0.5 rounded border">
                   350+ Emiten
                 </span>
               </div>

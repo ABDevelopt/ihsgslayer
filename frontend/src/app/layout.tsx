@@ -47,7 +47,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-darkBg text-slate-100 min-h-screen antialiased flex flex-col font-sans transition-colors duration-300">
+      <body className="bg-page text-primary min-h-screen antialiased flex flex-col font-sans transition-colors duration-300">
         <ThemeProvider>
           <ToastProvider>
           {/* Sidebar Nav */}
@@ -75,7 +75,7 @@ export default function RootLayout({
             </main>
 
             {/* Footer */}
-            <footer className="border-t border-cardBorder bg-cardBg/60 py-4 text-center text-xs text-slate-500 font-mono">
+            <footer className="border-t pg-divider bg-elevated/60 py-4 text-center text-xs pg-text-muted font-mono">
               <p>
                 IHSG Slayer PRO &copy; 2026. Platform Kuantitatif Pasar Modal Indonesia &bull; Bukan Nasihat Keuangan.
               </p>

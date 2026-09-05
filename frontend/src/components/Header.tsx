@@ -123,12 +123,12 @@ export default function Header({
 
   return (
     <>
-      <header className="sticky top-0 z-30 h-12 bg-cardBg/95 backdrop-blur-md border-b border-cardBorder/70 px-3 sm:px-4 lg:px-6 flex items-center justify-between transition-all">
+      <header className="sticky top-0 z-30 h-12 pg-header backdrop-blur-md border-b px-3 sm:px-4 lg:px-6 flex items-center justify-between transition-all">
         {/* Left: Mobile Menu, Collapse & Sleek Title */}
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 overflow-hidden mr-2">
           <button
             onClick={onToggleSidebar}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 lg:hidden shrink-0"
+            className="p-1.5 rounded-lg pg-text-muted hover:pg-muted hover:pg-text lg:hidden shrink-0"
             title="Menu Navigasi"
           >
             <Menu className="w-4 h-4" />
@@ -137,7 +137,7 @@ export default function Header({
           {onToggleCollapse && (
             <button
               onClick={onToggleCollapse}
-              className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent hover:border-slate-700/60 transition-all shrink-0"
+              className="hidden lg:flex p-1.5 rounded-lg pg-text-muted hover:pg-muted hover:pg-text border border-transparent hover:pg-divider transition-all shrink-0"
               title={isCollapsed ? "Buka Bilah Samping" : "Ciutkan Bilah Samping"}
             >
               {isCollapsed ? (
@@ -150,11 +150,11 @@ export default function Header({
 
           {/* Clean Title + Tag */}
           <div className="flex items-center space-x-2 min-w-0 overflow-hidden">
-            <h1 className="text-xs sm:text-sm font-bold text-slate-100 truncate tracking-tight">
+            <h1 className="text-xs sm:text-sm font-bold pg-text truncate tracking-tight">
               {pageMeta.title}
             </h1>
             {pageMeta.tag && (
-              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 bg-slate-800/70 border border-slate-700/50 truncate shrink-0">
+              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono pg-text-faint pg-muted border pg-divider truncate shrink-0">
                 {pageMeta.tag}
               </span>
             )}
@@ -167,8 +167,8 @@ export default function Header({
           <div
             className={`flex items-center space-x-1 px-2 py-1 rounded-lg border text-[9px] font-mono font-bold transition-all ${
               isConnected
-                ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-400"
-                : "bg-slate-900 border-slate-800 text-slate-400"
+                ? "pg-badge-emerald"
+                : "pg-muted border pg-divider pg-text-faint"
             }`}
             title={isConnected ? "Koneksi WebSocket Aktif" : "Mode Polling Aktif"}
           >
@@ -183,32 +183,32 @@ export default function Header({
           {/* Telegram Alert Button */}
           <button
             onClick={() => setIsTelegramOpen(true)}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-sky-500/50 text-slate-300 hover:text-white transition-all text-xs font-mono flex items-center gap-1.5"
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg pg-muted border pg-divider hover:pg-badge-sky pg-text-3 hover:pg-text transition-all text-xs font-mono flex items-center gap-1.5"
             title="Konfigurasi Telegram Alert Hub"
           >
-            <Send className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+            <Send className="w-3.5 h-3.5 pg-sky shrink-0" />
             <span className="hidden xl:inline">Telegram</span>
           </button>
 
           {/* Position Calculator Button */}
           <button
             onClick={() => setIsCalcOpen(true)}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-emerald-500/50 text-slate-300 hover:text-white transition-all text-xs font-mono flex items-center gap-1.5"
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg pg-muted border pg-divider hover:pg-badge-emerald pg-text-3 hover:pg-text transition-all text-xs font-mono flex items-center gap-1.5"
             title="Kalkulator Manajemen Risiko Lot"
           >
-            <Calculator className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <Calculator className="w-3.5 h-3.5 pg-emerald shrink-0" />
             <span className="hidden lg:inline">Kalkulator</span>
           </button>
 
           {/* Quick Search Trigger */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-emerald-500/50 text-slate-400 hover:text-slate-200 transition-all text-xs font-mono"
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg pg-muted border pg-divider hover:pg-badge-emerald pg-text-muted hover:pg-text transition-all text-xs font-mono"
             title="Cari Saham BEI (Ctrl+K)"
           >
-            <Search className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <Search className="w-3.5 h-3.5 pg-emerald shrink-0" />
             <span className="hidden sm:inline text-xs">Cari...</span>
-            <kbd className="hidden sm:inline px-1 py-0.2 rounded bg-slate-800 text-[9px] text-slate-400 border border-slate-700">
+            <kbd className="hidden sm:inline px-1 py-0.2 rounded pg-muted text-[9px] pg-text-faint border pg-divider">
               Ctrl+K
             </kbd>
           </button>
@@ -216,25 +216,25 @@ export default function Header({
           {/* Theme Toggle: Mode Terang / Mode Gelap */}
           <button
             onClick={toggleTheme}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-amber-500/50 text-slate-300 hover:text-white transition-all text-xs font-mono flex items-center gap-1.5 shrink-0"
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg pg-muted border pg-divider hover:pg-badge-amber pg-text-3 hover:pg-text transition-all text-xs font-mono flex items-center gap-1.5 shrink-0"
             title={theme === "dark" ? "Beralih ke Mode Terang (Light Mode)" : "Beralih ke Mode Gelap (Dark Mode)"}
           >
             {theme === "dark" ? (
               <>
-                <Sun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="hidden xl:inline text-amber-300 font-semibold">Terang</span>
+                <Sun className="w-3.5 h-3.5 pg-amber shrink-0" />
+                <span className="hidden xl:inline pg-amber font-semibold">Terang</span>
               </>
             ) : (
               <>
-                <Moon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                <span className="hidden xl:inline text-indigo-400 font-semibold">Gelap</span>
+                <Moon className="w-3.5 h-3.5 pg-indigo shrink-0" />
+                <span className="hidden xl:inline pg-indigo font-semibold">Gelap</span>
               </>
             )}
           </button>
 
           {/* Real-time Clock */}
-          <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-xs font-mono text-emerald-400">
-            <Clock className="w-3 h-3 text-emerald-400 animate-pulse shrink-0" />
+          <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg pg-muted border pg-divider text-xs font-mono pg-emerald">
+            <Clock className="w-3 h-3 pg-emerald animate-pulse shrink-0" />
             <span>{timeStr || "09:00 WIB"}</span>
           </div>
         </div>
@@ -261,21 +261,21 @@ export default function Header({
 
       {/* Command Palette Modal (Ctrl+K) */}
       {isSearchOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-black/70 backdrop-blur-md">
-          <div className="w-full max-w-xl bg-cardBg border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-slate-800 flex items-center space-x-3">
-              <Search className="w-5 h-5 text-emerald-400" />
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 pg-modal-overlay">
+          <div className="w-full max-w-xl pg-modal border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-4 border-b pg-divider flex items-center space-x-3">
+              <Search className="w-5 h-5 pg-emerald" />
               <input
                 type="text"
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Ketik kode saham (misal: BBCA, PTBA, WOOD, DIVA)..."
-                className="flex-1 bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none"
+                className="flex-1 bg-transparent pg-text placeholder-slate-500 text-sm focus:outline-none"
               />
               <button
                 onClick={() => setIsSearchOpen(false)}
-                className="px-2 py-1 rounded-lg bg-slate-800 text-xs font-mono text-slate-400 hover:text-white"
+                className="px-2 py-1 rounded-lg pg-muted text-xs font-mono pg-text-muted hover:pg-text"
               >
                 ESC
               </button>
@@ -284,7 +284,7 @@ export default function Header({
             {/* Suggestions list */}
             <div className="p-2 max-h-80 overflow-y-auto space-y-1">
               {filteredStocks.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-500 font-mono">
+                <div className="p-6 text-center text-xs pg-text-faint font-mono">
                   Tidak ditemukan emiten yang sesuai dengan &quot;{searchQuery}&quot;.
                 </div>
               ) : (
@@ -296,20 +296,20 @@ export default function Header({
                       setSearchQuery("");
                       router.push(`/analysis/${stock.symbol}`);
                     }}
-                    className="w-full p-2.5 rounded-xl hover:bg-slate-800/80 flex items-center justify-between text-left transition-all group"
+                    className="w-full p-2.5 rounded-xl hover:pg-muted flex items-center justify-between text-left transition-all group"
                   >
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-mono font-bold text-sm text-emerald-400">
+                        <span className="font-mono font-bold text-sm pg-emerald">
                           {stock.symbol}
                         </span>
-                        <span className="text-xs text-slate-300 font-medium">
+                        <span className="text-xs pg-text-3 font-medium">
                           {stock.name}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500">{stock.sector}</div>
+                      <div className="text-[10px] pg-text-faint">{stock.sector}</div>
                     </div>
-                    <div className="text-xs text-slate-400 group-hover:text-emerald-400 flex items-center space-x-1 font-mono">
+                    <div className="text-xs pg-text-muted group-hover:pg-emerald flex items-center space-x-1 font-mono">
                       <span>Bedah 360°</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
