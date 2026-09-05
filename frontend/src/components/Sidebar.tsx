@@ -142,8 +142,15 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
       ],
     },
     {
-      sectionTitle: "Studio & Audit Kuantitatif",
+      sectionTitle: "Portofolio & Audit Kuantitatif",
       items: [
+        {
+          href: "/portfolio",
+          label: "Portofolio & Rekomendasi",
+          icon: Wallet,
+          chip: "AI Advisor",
+          chipVariant: "emerald",
+        },
         {
           href: "/evaluation",
           label: "Audit & Evaluasi Riil",
@@ -164,20 +171,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           icon: BarChart3,
           chip: "DSR",
           chipVariant: "indigo",
-        },
-        {
-          href: "/portfolio",
-          label: "Portofolio & Rekomendasi",
-          icon: Wallet,
-          chip: "AI Advisor",
-          chipVariant: "emerald",
-        },
-        {
-          href: "/journal",
-          label: "Jurnal Portofolio",
-          icon: BookOpen,
-          chip: "FIFO",
-          chipVariant: "default",
         },
         {
           href: "/guide",

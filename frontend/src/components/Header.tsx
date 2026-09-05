@@ -39,7 +39,7 @@ const PAGE_META: Record<string, PageMeta> = {
   "/confluence": { title: "Konfluensi Screener", tag: "Super Cluster" },
   "/orderflow": { title: "Bandar & Order-Flow", tag: "Analisis LPM" },
   "/smartpick": { title: "Pola Smart Pick", tag: "Pantulan Teknikal" },
-  "/portfolio": { title: "Portofolio RDN", tag: "Advisor & Sizing" },
+  "/portfolio": { title: "Portofolio & Rekomendasi", tag: "AI Advisor & Sizing" },
   "/multibagger": { title: "Multibagger Hunter", tag: "2x - 5x Potensi" },
   "/screener": { title: "AI Screener", tag: "NLP Search" },
   "/sentiment": { title: "Sentimen Makro", tag: "Berita & EIDO" },

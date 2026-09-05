@@ -9,6 +9,15 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/journal",
+        destination: "/portfolio",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
