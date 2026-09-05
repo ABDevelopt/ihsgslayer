@@ -213,6 +213,9 @@ async def get_bsjp_candidates(min_score: float = 60.0):
     # Auto-log to Signal History and Real Outcome Audit (Dual-Sync)
     from src.analytics.signal_history import SignalHistoryEngine
     from src.analytics.signal_evaluator import SignalEvaluatorEngine
+    now = datetime.now()
+    now_time_str = now.strftime("%H:%M WIB")
+    now_date_str = now.strftime("%Y-%m-%d")
     for c in candidates:
         SignalHistoryEngine.record_signal_event(
             signal_type="BSJP_SORE",
@@ -237,6 +240,8 @@ async def get_bsjp_candidates(min_score: float = 60.0):
             target_tp1=c.target_sell_morning_min,
             target_tp2=c.target_sell_morning_max,
             stop_loss=c.stop_loss_morning,
+            signal_time=now_time_str,
+            signal_date=now_date_str,
             eval_metadata={"bsjp_score": c.bsjp_score, "gap_up_probability": c.gap_up_probability}
         )
 
@@ -275,6 +280,9 @@ async def get_bpjs_candidates(min_score: float = 60.0):
     # Auto-log to Signal History and Real Outcome Audit (Dual-Sync)
     from src.analytics.signal_history import SignalHistoryEngine
     from src.analytics.signal_evaluator import SignalEvaluatorEngine
+    now = datetime.now()
+    now_time_str = now.strftime("%H:%M WIB")
+    now_date_str = now.strftime("%Y-%m-%d")
     for c in candidates:
         SignalHistoryEngine.record_signal_event(
             signal_type="BPJS_PAGI",
@@ -304,6 +312,8 @@ async def get_bpjs_candidates(min_score: float = 60.0):
             target_tp1=tp1_val,
             target_tp2=tp2_val,
             stop_loss=sl_val,
+            signal_time=now_time_str,
+            signal_date=now_date_str,
             eval_metadata={"bpjs_score": c.bpjs_score, "volume_multiplier": c.volume_multiplier}
         )
 
@@ -338,6 +348,9 @@ async def get_pre_ara_candidates(min_score: float = 65.0):
     # Auto-log to Signal History and Real Outcome Audit (Dual-Sync)
     from src.analytics.signal_history import SignalHistoryEngine
     from src.analytics.signal_evaluator import SignalEvaluatorEngine
+    now = datetime.now()
+    now_time_str = now.strftime("%H:%M WIB")
+    now_date_str = now.strftime("%Y-%m-%d")
     for c in candidates:
         SignalHistoryEngine.record_signal_event(
             signal_type="PRE_ARA_HUNTER",
@@ -364,6 +377,8 @@ async def get_pre_ara_candidates(min_score: float = 65.0):
             target_tp1=c.predicted_tp1_price,
             target_tp2=c.ara_ceiling_price,
             stop_loss=c.predicted_stop_loss_price,
+            signal_time=now_time_str,
+            signal_date=now_date_str,
             eval_metadata={"pre_ara_score": c.pre_ara_score, "ara_probability": c.ara_probability}
         )
 
@@ -643,6 +658,9 @@ async def get_institutional_buy_signals(min_score: float = 68.0):
                 safety_shield_status=sig_dict["safety_shield_status"],
                 rationale=why_buy_summary
             )
+            now = datetime.now()
+            now_time_str = now.strftime("%H:%M WIB")
+            now_date_str = now.strftime("%Y-%m-%d")
             SignalEvaluatorEngine.record_signal(
                 strategy_type="BUY_LAYAK",
                 symbol=sym,
@@ -652,6 +670,8 @@ async def get_institutional_buy_signals(min_score: float = 68.0):
                 target_tp1=sig_dict["tp1_price"],
                 target_tp2=sig_dict["tp2_price"],
                 stop_loss=sig_dict["stop_loss_price"],
+                signal_time=now_time_str,
+                signal_date=now_date_str,
                 target_exit_time="Swing 3-15 Hari (Level TP1 / TP2)",
                 eval_metadata={
                     "ai_score": score,

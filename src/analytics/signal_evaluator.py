@@ -76,16 +76,20 @@ class SignalEvaluatorEngine:
         """
         now = datetime.now()
         s_date = signal_date or now.strftime("%Y-%m-%d")
+        current_time_str = now.strftime("%H:%M WIB")
         
         if strategy_type == "BPJS":
-            s_time = signal_time or "09:30 WIB"
+            s_time = signal_time or current_time_str
             t_exit = target_exit_time or "15:30 WIB (Sesi Sore)"
         elif strategy_type == "PRE_ARA":
-            s_time = signal_time or "09:15 WIB"
+            s_time = signal_time or current_time_str
             t_exit = target_exit_time or "15:45 WIB (Penutupan Sore / ARA)"
-        else:
-            s_time = signal_time or "15:50 WIB"
+        elif strategy_type == "BSJP":
+            s_time = signal_time or current_time_str
             t_exit = target_exit_time or "09:15 WIB H+1 (Pembukaan Pagi)"
+        else:
+            s_time = signal_time or current_time_str
+            t_exit = target_exit_time or "Swing 3-15 Hari (Level TP1 / TP2)"
 
         from src.data.universe import is_stock_sharia
         records = cls.load_records()

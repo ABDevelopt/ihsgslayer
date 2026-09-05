@@ -9878,5 +9878,25 @@
     "risk_reward": "1 : 1.5",
     "safety_shield_status": "PERISAI AMAN (BEBAS FCA / SUSPENSI / ARB)",
     "rationale": "Saham IRSX.JK layak dibeli karena memiliki konfluensi 4 faktor: fundamental solid (Skor 72.2/100), terkonfirmasi Penyerapan volume aktif 2.9x lipat dari rata-rata, setup pantulan EARLY_BREAKOUT, serta batas risiko terukur dengan R:R 1 : 1.5."
+  },
+  {
+    "id": 495,
+    "timestamp": "2026-09-05 10:37:31 WIB",
+    "signal_date": "2026-09-05",
+    "signal_time": "10:37:31 WIB",
+    "signal_type": "BUY_INSTITUSIONAL",
+    "symbol": "SMSM.JK",
+    "name": "Selamat Sempurna Tbk",
+    "sector": "Consumer Cyclicals",
+    "price_at_signal": 1720.0,
+    "ai_score": 68.56,
+    "setup_pattern": "BULL_DIVERGENCE",
+    "entry_zone": "Rp 1,703 - Rp 1,737",
+    "target_tp1": "Rp 1,836 (+6.7%)",
+    "target_tp2": "Rp 1,926 (+12.0%)",
+    "stop_loss": "Rp 1,643 (-4.5%)",
+    "risk_reward": "1 : 1.5",
+    "safety_shield_status": "PERISAI AMAN (BEBAS FCA / SUSPENSI / ARB)",
+    "rationale": "Saham SMSM.JK layak dibeli karena memiliki konfluensi 4 faktor: fundamental solid (Skor 68.6/100), terkonfirmasi Penyerapan volume aktif 2.5x lipat dari rata-rata, setup pantulan BULL_DIVERGENCE, serta batas risiko terukur dengan R:R 1 : 1.5."
   }
 ]

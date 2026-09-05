@@ -21,8 +21,10 @@ from src.api.routers.evaluation import router as evaluation_router
 from src.api.routers.forward_test import router as forward_test_router
 from src.api.routers.alerts import router as alerts_router
 from src.api.routers.danger_shield import router as danger_shield_router
+from src.api.routers.portfolio import router as portfolio_router
 from src.api.routers.sentiment import router as sentiment_router
 from src.api.routers.intraday_cycle import router as intraday_cycle_router
+from src.api.routers.deploy_webhook import router as deploy_webhook_router
 from src.api.routers.stream import router as stream_router, set_main_event_loop, broadcast_market_event
 
 logger = setup_logger("main")
@@ -134,12 +136,14 @@ app.include_router(stocks_router, prefix="/api/v1")
 app.include_router(screener_router, prefix="/api/v1")
 app.include_router(backtest_router, prefix="/api/v1")
 app.include_router(journal_router, prefix="/api/v1")
+app.include_router(portfolio_router, prefix="/api/v1")
 app.include_router(evaluation_router, prefix="/api/v1")
 app.include_router(forward_test_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
 app.include_router(danger_shield_router, prefix="/api/v1")
 app.include_router(sentiment_router, prefix="/api/v1")
 app.include_router(intraday_cycle_router, prefix="/api/v1")
+app.include_router(deploy_webhook_router, prefix="/api/v1")
 app.include_router(stream_router)
 
 @app.get("/", response_class=HTMLResponse, tags=["Web App"])

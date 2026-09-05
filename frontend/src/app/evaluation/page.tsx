@@ -33,6 +33,26 @@ import { EvaluationSummary, EvaluatedTrade } from "@/lib/types";
 import { formatRupiah, formatPercent } from "@/lib/utils";
 import { useToast } from "@/components/Toast";
 
+const formatAuditDate = (dateStr?: string) => {
+  if (!dateStr) return "-";
+  try {
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parts[2];
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+      const monthName = monthNames[monthIdx] || parts[1];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const isToday = dateStr === todayStr;
+      return `${day} ${monthName} ${year}${isToday ? " (Hari Ini)" : ""}`;
+    }
+  } catch {
+    // fallback
+  }
+  return dateStr;
+};
+
 export default function EvaluationPage() {
   const [summary, setSummary] = useState<EvaluationSummary | null>(null);
   const [records, setRecords] = useState<EvaluatedTrade[]>([]);
@@ -518,13 +538,7 @@ export default function EvaluationPage() {
                 <option value="">Semua Tanggal ({availableDates.length} Hari)</option>
                 {availableDates.map((d) => (
                   <option key={d} value={d}>
-                    {d === "2026-09-02"
-                      ? "02 Sep 2026 (Hari Ini)"
-                      : d === "2026-09-01"
-                      ? "01 Sep 2026 (1 September)"
-                      : d === "2026-08-31"
-                      ? "31 Agu 2026"
-                      : d}
+                    {formatAuditDate(d)}
                   </option>
                 ))}
               </select>
@@ -677,13 +691,9 @@ export default function EvaluationPage() {
                         </td>
                         <td className="py-3 px-3 text-slate-400 font-mono text-[11px]">
                           <div className="font-bold text-slate-200">
-                            {r.signal_date === "2026-09-01"
-                              ? "01 Sep 2026"
-                              : r.signal_date === "2026-09-02"
-                              ? "02 Sep 2026"
-                              : r.signal_date || "-"}
+                            {formatAuditDate(r.signal_date).replace(" (Hari Ini)", "")}
                           </div>
-                          <div className="text-slate-500 text-[10px]">{r.signal_time}</div>
+                          <div className="text-slate-400 text-[10px] font-mono">{r.signal_time || "-"}</div>
                         </td>
                         <td className="py-3 px-3 text-slate-200 font-mono text-right font-bold">
                           {formatRupiah(entryPrice)}
@@ -704,7 +714,11 @@ export default function EvaluationPage() {
                         <td className="py-3 px-3 text-center font-mono">
                           {isPending ? (
                             <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700 inline-block">
-                              Sedang Berjalan s/d 15:45
+                              {strat === "BUY_LAYAK"
+                                ? "Swing 3-15 Hari"
+                                : strat === "BSJP"
+                                ? "Target: Besok 09:15"
+                                : "Sedang Berjalan s/d 15:45"}
                             </span>
                           ) : isWin ? (
                             <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 inline-flex items-center gap-1 shadow-sm">

@@ -245,4 +245,58 @@ export const api = {
       body: JSON.stringify(data),
     });
   },
+
+  // Portfolio Multi-Analysis & Daily Recommendations
+  async getPortfolioAdvisor(cashBalance = 50000000): Promise<any> {
+    return fetchJson(`/portfolio/analysis?cash_balance=${cashBalance}`);
+  },
+
+  async getPortfolioHoldings(): Promise<any> {
+    return fetchJson("/portfolio/holdings");
+  },
+
+  async addPortfolioHolding(data: {
+    symbol: string;
+    entry_price: number;
+    shares_lot: number;
+    target_tp1?: number;
+    target_tp2?: number;
+    stop_loss?: number;
+    entry_date?: string;
+    notes?: string;
+  }): Promise<any> {
+    return fetchJson("/portfolio/add", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async sellPortfolioHolding(data: {
+    holding_id: string;
+    exit_price: number;
+    shares_lot: number;
+    exit_date?: string;
+    reason?: string;
+  }): Promise<any> {
+    return fetchJson("/portfolio/sell", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deletePortfolioHolding(holdingId: string): Promise<any> {
+    return fetchJson(`/portfolio/holding/${holdingId}`, {
+      method: "DELETE",
+    });
+  },
+
+  async resetDemoPortfolio(): Promise<any> {
+    return fetchJson("/portfolio/reset-demo", {
+      method: "POST",
+    });
+  },
+
+  async getPortfolioClosedTrades(): Promise<any> {
+    return fetchJson("/portfolio/closed-trades");
+  },
 };

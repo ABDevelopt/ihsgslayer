@@ -23,7 +23,8 @@ import {
   PanelLeftOpen,
   ChevronLeft,
   ChevronRight,
-  Newspaper
+  Newspaper,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -155,6 +156,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           icon: BarChart3,
           chip: "DSR",
           chipVariant: "indigo",
+        },
+        {
+          href: "/portfolio",
+          label: "Portofolio & Rekomendasi",
+          icon: Wallet,
+          chip: "AI Advisor",
+          chipVariant: "emerald",
         },
         {
           href: "/journal",

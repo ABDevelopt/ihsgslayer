@@ -1,0 +1,58 @@
+[
+  {
+    "id": "pos-bbca-01",
+    "symbol": "BBCA.JK",
+    "name": "Bank Central Asia Tbk",
+    "sector": "Financials",
+    "is_sharia": false,
+    "shares_lot": 30,
+    "entry_price": 6550.0,
+    "entry_date": "2026-08-20",
+    "target_tp1": 7150.0,
+    "target_tp2": 7500.0,
+    "stop_loss": 6350.0,
+    "notes": "Core Holding Perbankan Big-Cap, akumulasi asing konsisten"
+  },
+  {
+    "id": "pos-adro-02",
+    "symbol": "ADRO.JK",
+    "name": "Adaro Energy Indonesia Tbk",
+    "sector": "Energy",
+    "is_sharia": true,
+    "shares_lot": 70,
+    "entry_price": 2500.0,
+    "entry_date": "2026-08-25",
+    "target_tp1": 2700.0,
+    "target_tp2": 2900.0,
+    "stop_loss": 2400.0,
+    "notes": "Swing Komoditas Batu Bara & Green Energy Dividen Jumbo"
+  },
+  {
+    "id": "pos-tlkm-03",
+    "symbol": "TLKM.JK",
+    "name": "Telkom Indonesia (Persero) Tbk",
+    "sector": "Infrastructure",
+    "is_sharia": true,
+    "shares_lot": 60,
+    "entry_price": 2520.0,
+    "entry_date": "2026-08-28",
+    "target_tp1": 2850.0,
+    "target_tp2": 3050.0,
+    "stop_loss": 2420.0,
+    "notes": "Undervalued Rebound Play Telekomunikasi & Data Center"
+  },
+  {
+    "id": "pos-bris-04",
+    "symbol": "BRIS.JK",
+    "name": "Bank Syariah Indonesia Tbk",
+    "sector": "Financials",
+    "is_sharia": true,
+    "shares_lot": 50,
+    "entry_price": 1720.0,
+    "entry_date": "2026-09-01",
+    "target_tp1": 1920.0,
+    "target_tp2": 2050.0,
+    "stop_loss": 1640.0,
+    "notes": "Breakout Momentum Perbankan Syariah Pertumbuhan Tinggi"
+  }
+]

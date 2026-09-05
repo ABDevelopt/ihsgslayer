@@ -1,11 +1,11 @@
 {
   "initial_cash": 100000000.0,
-  "cash_balance": 43322263.0,
-  "total_equity": 44480263.0,
+  "cash_balance": 34069263.0,
+  "total_equity": 35227263.0,
   "stock_market_value": 1158000.0,
-  "total_pnl_rp": 1567500.0,
-  "total_pnl_pct": -55.52,
-  "nav_per_unit": 444.8,
+  "total_pnl_rp": 1828750.0,
+  "total_pnl_pct": -64.77,
+  "nav_per_unit": 352.27,
   "open_positions": [
     {
       "id": "d90841b6",
@@ -219,6 +219,32 @@
     },
     {
       "id": "d8d5e2b5",
+      "symbol": "BBCA.JK",
+      "entry_price": 9500.0,
+      "exit_price": 9800.0,
+      "shares_lot": 5,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 130625.0,
+      "realized_pnl_pct": 2.75,
+      "notes": "Manual Exit"
+    },
+    {
+      "id": "38c95d2d",
+      "symbol": "BBCA.JK",
+      "entry_price": 9500.0,
+      "exit_price": 9800.0,
+      "shares_lot": 5,
+      "entry_date": "2026-09-05",
+      "exit_date": "2026-09-05",
+      "status": "CLOSED",
+      "realized_pnl_rp": 130625.0,
+      "realized_pnl_pct": 2.75,
+      "notes": "Manual Exit"
+    },
+    {
+      "id": "5fd61042",
       "symbol": "BBCA.JK",
       "entry_price": 9500.0,
       "exit_price": 9800.0,

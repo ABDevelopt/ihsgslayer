@@ -1,0 +1,29 @@
+name: Auto Deploy to Tencent Lighthouse
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to Tencent Cloud
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Webhook Deploy on Server
+        run: |
+          echo "🚀 Sending Auto-Deploy trigger to Tencent Lighthouse server..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "http://43.163.98.53/api/v1/webhook/github-deploy?secret=ihsgslayer_deploy_secret_2026" \
+            -H "Content-Type: application/json" \
+            -d '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "commit_msg": "${{ github.event.head_commit.message }}"}')
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "HTTP Response Code: $HTTP_CODE"
+          echo "Response Body: $BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 202 ]; then
+            echo "✅ Deployment successfully triggered on server!"
+          else
+            echo "⚠️ Webhook trigger returned code $HTTP_CODE, checking deploy status..."
+          fi

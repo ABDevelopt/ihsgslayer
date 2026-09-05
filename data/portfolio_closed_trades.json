@@ -1,0 +1,32 @@
+[
+  {
+    "id": "trade-793d12b9",
+    "holding_id": "pos-asii-f22f90",
+    "symbol": "ASII.JK",
+    "name": "Astra International Tbk",
+    "sector": "Consumer Cyclicals",
+    "shares_lot": 10,
+    "entry_price": 5000.0,
+    "exit_price": 5200.0,
+    "entry_date": "2026-09-05",
+    "exit_date": "2026-09-05",
+    "realized_pnl_rp": 179500.0,
+    "realized_pnl_pct": 3.58,
+    "reason": "Partial profit take"
+  },
+  {
+    "id": "trade-b9edb39f",
+    "holding_id": "pos-asii-7c48b8",
+    "symbol": "ASII.JK",
+    "name": "Astra International Tbk",
+    "sector": "Consumer Cyclicals",
+    "shares_lot": 10,
+    "entry_price": 5000.0,
+    "exit_price": 5200.0,
+    "entry_date": "2026-09-05",
+    "exit_date": "2026-09-05",
+    "realized_pnl_rp": 179500.0,
+    "realized_pnl_pct": 3.58,
+    "reason": "Partial profit take"
+  }
+]
