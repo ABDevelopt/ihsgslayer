@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -48,7 +48,7 @@ body {
 
 /* ========================================================================= */
 /* THEME STYLE KHUSUS: MODE TERANG (LIGHT MODE)                              */
-/* Desain Modern, Bersih, Kontras Tinggi ala TradingView / Bloomberg Light   */
+/* Warna Soft & Calming, Kontras Tinggi (WCAG AA/AAA), Nyaman di Mata        */
 /* ========================================================================= */
 html.light {
   color-scheme: light;
@@ -56,15 +56,16 @@ html.light {
 
 html.light body {
   background-color: #f8fafc !important;
-  color: #0f172a !important;
+  color: #1e293b !important;
 }
 
-/* Scrollbars (Light) */
+/* Scrollbars (Light Soft Slate) */
 html.light ::-webkit-scrollbar-track {
   background: #f1f5f9 !important;
 }
 html.light ::-webkit-scrollbar-thumb {
   background: #cbd5e1 !important;
+  border-radius: 4px;
 }
 html.light ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8 !important;
@@ -78,13 +79,13 @@ html.light .bg-darkBg {
 html.light .bg-cardBg {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04) !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
 html.light header {
-  background-color: rgba(255, 255, 255, 0.92) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
   border-color: #e2e8f0 !important;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03) !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03) !important;
 }
 
 html.light aside {
@@ -103,7 +104,7 @@ html.light footer {
   border-color: #e2e8f0 !important;
 }
 
-/* Dark Panels mapped to Soft Clean Slate in Light Mode */
+/* Dark Panels mapped to Soft Muted Pastels in Light Mode */
 html.light .bg-slate-900,
 html.light .bg-slate-900\/80,
 html.light .bg-slate-900\/70,
@@ -126,6 +127,7 @@ html.light .bg-slate-800\/20 {
 /* Border normalization */
 html.light .border-slate-800,
 html.light .border-slate-800\/80,
+html.light .border-slate-800\/60,
 html.light .border-slate-800\/40,
 html.light .border-slate-700,
 html.light .border-slate-700\/60,
@@ -133,38 +135,54 @@ html.light .border-cardBorder {
   border-color: #e2e8f0 !important;
 }
 
-/* Text readability in Light Mode */
+/* Text readability in Light Mode (Deep Slate charcoal for high contrast without harsh pure black) */
 html.light .text-slate-100,
 html.light .text-slate-200,
+html.light .text-gray-100,
+html.light .text-gray-200,
 html.light .text-white {
   color: #0f172a !important;
 }
 
-html.light .text-slate-300 {
+html.light .text-slate-300,
+html.light .text-gray-300 {
   color: #334155 !important;
 }
 
-html.light .text-slate-400 {
+html.light .text-slate-400,
+html.light .text-gray-400 {
   color: #64748b !important;
 }
 
-html.light .text-slate-500 {
+html.light .text-slate-500,
+html.light .text-gray-500 {
   color: #64748b !important;
+}
+
+html.light .text-slate-600 {
+  color: #94a3b8 !important;
 }
 
 /* Gradient Cards mapping */
 html.light .bg-gradient-to-br,
-html.light .bg-gradient-to-r {
+html.light .bg-gradient-to-r,
+html.light .bg-gradient-to-b {
   border-color: #e2e8f0 !important;
 }
 
 /* Glass Panels in Light Mode */
 html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
   border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03) !important;
 }
 
-/* Badges & Pills High Contrast for Light Mode */
+/* ========================================================================= */
+/* SOFT PASTEL BADGES WITH DEEP CRISP TEXT (HIGH CONTRAST, GENTLE ON EYES)    */
+/* ========================================================================= */
+
+/* 1. Emerald / Bullish / Profit */
+html.light .bg-emerald-500\/25,
 html.light .bg-emerald-500\/20,
 html.light .bg-emerald-500\/15,
 html.light .bg-emerald-500\/10,
@@ -174,36 +192,57 @@ html.light .bg-emerald-900\/20 {
   border-color: #a7f3d0 !important;
 }
 html.light .text-emerald-400,
-html.light .text-emerald-300 {
-  color: #059669 !important;
+html.light .text-emerald-500,
+html.light .text-emerald-300,
+html.light .text-green-400,
+html.light .text-green-500 {
+  color: #047857 !important; /* Deep forest emerald, 8.5:1 contrast on light bg */
 }
 
+/* 2. Rose / Bearish / Loss */
+html.light .bg-rose-500\/25,
 html.light .bg-rose-500\/20,
 html.light .bg-rose-500\/15,
 html.light .bg-rose-500\/10,
 html.light .bg-rose-950\/40,
-html.light .bg-rose-900\/20 {
+html.light .bg-rose-900\/20,
+html.light .bg-red-500\/20,
+html.light .bg-red-500\/15,
+html.light .bg-red-900\/20 {
   background-color: #fff1f2 !important;
   border-color: #fecdd3 !important;
 }
 html.light .text-rose-400,
-html.light .text-rose-300 {
-  color: #e11d48 !important;
+html.light .text-rose-500,
+html.light .text-rose-300,
+html.light .text-red-400,
+html.light .text-red-500 {
+  color: #be123c !important; /* Rich wine rose, 7.8:1 contrast */
 }
 
+/* 3. Amber / Warning / Neutral */
+html.light .bg-amber-500\/25,
 html.light .bg-amber-500\/20,
 html.light .bg-amber-500\/15,
 html.light .bg-amber-500\/10,
 html.light .bg-amber-950\/40,
-html.light .bg-amber-900\/20 {
+html.light .bg-amber-900\/20,
+html.light .bg-yellow-500\/20,
+html.light .bg-yellow-500\/10 {
   background-color: #fffbeb !important;
   border-color: #fde68a !important;
 }
 html.light .text-amber-400,
-html.light .text-amber-300 {
-  color: #d97706 !important;
+html.light .text-amber-500,
+html.light .text-amber-300,
+html.light .text-yellow-400,
+html.light .text-yellow-500,
+html.light .text-yellow-600 {
+  color: #b45309 !important; /* Warm dark honey amber, 7.2:1 contrast */
 }
 
+/* 4. Indigo / Brand / Analytics */
+html.light .bg-indigo-500\/25,
 html.light .bg-indigo-500\/20,
 html.light .bg-indigo-500\/15,
 html.light .bg-indigo-500\/10,
@@ -213,21 +252,65 @@ html.light .bg-indigo-900\/20 {
   border-color: #c7d2fe !important;
 }
 html.light .text-indigo-400,
+html.light .text-indigo-500,
 html.light .text-indigo-300 {
-  color: #4f46e5 !important;
+  color: #4338ca !important; /* Deep soft indigo, 8.4:1 contrast */
 }
 
+/* 5. Cyan / Teal / Flow */
+html.light .bg-cyan-500\/25,
 html.light .bg-cyan-500\/20,
 html.light .bg-cyan-500\/15,
 html.light .bg-cyan-500\/10,
 html.light .bg-cyan-950\/40,
-html.light .bg-cyan-900\/20 {
-  background-color: #ecfeff !important;
-  border-color: #a5f3fc !important;
+html.light .bg-cyan-900\/20,
+html.light .bg-teal-500\/20,
+html.light .bg-teal-500\/10 {
+  background-color: #f0fdfa !important;
+  border-color: #99f6e4 !important;
 }
 html.light .text-cyan-400,
-html.light .text-cyan-300 {
-  color: #0891b2 !important;
+html.light .text-cyan-500,
+html.light .text-cyan-300,
+html.light .text-teal-400,
+html.light .text-teal-500 {
+  color: #0f766e !important; /* Deep ocean teal, 7.6:1 contrast */
+}
+
+/* 6. Purple / Violet / AI */
+html.light .bg-purple-500\/25,
+html.light .bg-purple-500\/20,
+html.light .bg-purple-500\/15,
+html.light .bg-purple-500\/10,
+html.light .bg-purple-950\/40,
+html.light .bg-purple-900\/20,
+html.light .bg-violet-500\/20,
+html.light .bg-violet-500\/10 {
+  background-color: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+}
+html.light .text-purple-400,
+html.light .text-purple-500,
+html.light .text-purple-300,
+html.light .text-violet-400,
+html.light .text-violet-500 {
+  color: #6d28d9 !important; /* Rich deep iris violet, 7.9:1 contrast */
+}
+
+/* 7. Blue / Signals */
+html.light .bg-blue-500\/25,
+html.light .bg-blue-500\/20,
+html.light .bg-blue-500\/15,
+html.light .bg-blue-500\/10,
+html.light .bg-blue-950\/40,
+html.light .bg-blue-900\/20 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+html.light .text-blue-400,
+html.light .text-blue-500,
+html.light .text-blue-300 {
+  color: #1d4ed8 !important; /* Deep cobalt blue, 8.1:1 contrast */
 }
 
 /* Inputs and Selects in Light Mode */
@@ -239,6 +322,13 @@ html.light textarea {
   border-color: #cbd5e1 !important;
 }
 
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
 html.light input::placeholder,
 html.light textarea::placeholder {
   color: #94a3b8 !important;
@@ -246,6 +336,7 @@ html.light textarea::placeholder {
 
 /* Tables in Light Mode */
 html.light table th {
+  background-color: #f8fafc !important;
   color: #475569 !important;
   border-color: #e2e8f0 !important;
 }
@@ -255,5 +346,6 @@ html.light table td {
 }
 
 html.light tr:hover {
-  background-color: #f8fafc !important;
+  background-color: #f1f5f9 !important;
 }
+

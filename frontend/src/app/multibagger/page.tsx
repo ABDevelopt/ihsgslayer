@@ -239,194 +239,112 @@ export default function MultibaggerHunterPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* ========================================================================= */}
-      {/* ULTRA-CREATIVE ANTI-MAINSTREAM HEADER: QUANTUM MULTIBAGGER RADAR HUD v3.0 */}
+      {/* SIMPLIFIED COMPACT HEADER: MULTIBAGGER HUNTER v3.0                        */}
       {/* ========================================================================= */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#090d18] border border-indigo-500/30 shadow-[0_0_50px_-10px_rgba(79,70,229,0.25)] p-6 sm:p-8">
-        {/* Background Cyber-Grid & Ambient Laser Glow */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b18_1px,transparent_1px),linear-gradient(to_bottom,#1e293b18_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-60" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-
-        {/* HUD Technical Corner Telemetry Brackets */}
-        <div className="absolute top-3 left-4 text-[9px] font-mono text-indigo-400/40 select-none tracking-widest hidden sm:block">
-          +── [SYS.RADAR // QUANTUM_MBH_3.0]
-        </div>
-        <div className="absolute top-3 right-4 text-[9px] font-mono text-cyan-400/40 select-none tracking-widest hidden sm:block">
-          [ALGO_CONVERGENCE: ACTIVE] ──+
-        </div>
-
-        <div className="relative z-10 space-y-6">
-          {/* Upper Row: Badges, Title, Runway Trajectory & Action Button */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            <div className="space-y-3.5 max-w-4xl">
-              {/* Telemetry Status Line */}
-              <div className="flex items-center gap-2.5 flex-wrap">
-                {/* 1. Version Badge */}
-                <div className="px-3.5 py-1 rounded-full text-xs font-mono font-bold bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-cyan-500/20 text-indigo-300 border border-indigo-500/40 flex items-center gap-2 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                  <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-                  <Rocket className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>MULTIBAGGER HUNTER v3.0</span>
-                </div>
-
-                {/* 2. Detected Count Badge */}
-                <div className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  <span>{candidates.length > 0 ? candidates.length : 17} Saham Terdeteksi</span>
-                </div>
-
-                {/* 3. Core Formula Pill */}
-                <div className="px-3 py-1 rounded-full bg-slate-900/80 border border-slate-700/70 text-slate-300 font-mono text-[11px] flex items-center gap-1.5 shadow-inner">
-                  <Zap className="w-3 h-3 text-cyan-400" />
-                  <span>Minervini Stage 2 + Peter Lynch Runway + Institutional Bandarmologi</span>
-                </div>
-              </div>
-
-              {/* Main Headline */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center flex-wrap gap-2.5">
-                  <span>Screening Saham Calon Bagger</span>
-                  <span className="relative inline-block px-3 py-0.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-emerald-500/20 border border-amber-500/40 text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] font-mono">
-                    (2x – 5x)
-                  </span>
-                </h1>
-
-                {/* Creative Runway Milestone Arc (Visual Trajectory) */}
-                <div className="hidden xl:flex items-center gap-1.5 py-1 px-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 text-[10px] font-mono text-slate-400">
-                  <span className="text-slate-500">RUNWAY:</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-semibold">1x Base</span>
-                  <span className="text-indigo-400">➔</span>
-                  <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">2x Double</span>
-                  <span className="text-cyan-400">➔</span>
-                  <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30">3x Triple</span>
-                  <span className="text-amber-400">➔</span>
-                  <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 animate-pulse">5x Super-Bagger</span>
-                </div>
-              </div>
-
-              {/* Mission / Methodology Narrative Description */}
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Algoritma mendeteksi saham <span className="text-cyan-300 font-semibold">small – mid cap</span> yang berada di fase awal akumulasi institusi (<span className="text-emerald-300 font-semibold">Bandar CR3 &gt; 55%</span>), lolos kriteria tren <span className="text-indigo-300 font-semibold">Mark Minervini Stage 2</span>, <span className="text-purple-300 font-semibold">kontraksi volatilitas (VCP)</span>, serta memiliki landasan <span className="text-amber-300 font-semibold">valuasi pertumbuhan teruji</span>.
-              </p>
+      <div className="rounded-2xl bg-cardBg border border-indigo-500/30 p-5 shadow-lg space-y-4">
+        {/* Top Flex: Titles, Badges, Runway & Refresh */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div className="space-y-2">
+            {/* Badges line */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
+                <Rocket className="w-3 h-3 text-indigo-400" />
+                MULTIBAGGER HUNTER v3.0
+              </span>
+              <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                {candidates.length > 0 ? candidates.length : 20} Saham Terdeteksi
+              </span>
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-lg text-[10px] font-mono text-slate-400 bg-slate-900 border border-slate-800">
+                Minervini Stage 2 &bull; Peter Lynch Runway &bull; Bandarmologi
+              </span>
             </div>
 
-            {/* Refresh Action Trigger */}
-            <button
-              onClick={() => fetchData()}
-              disabled={refreshing}
-              className="relative group overflow-hidden px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-mono font-bold text-xs flex items-center gap-2.5 shadow-[0_0_25px_rgba(99,102,241,0.35)] hover:shadow-[0_0_35px_rgba(6,182,212,0.45)] transition-all duration-300 disabled:opacity-50 shrink-0 self-stretch lg:self-auto justify-center"
-            >
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
-              <RefreshCw className={`w-4 h-4 text-cyan-200 ${refreshing ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
-              <span className="tracking-wide">
-                {refreshing ? "Memindai Pasar BEI..." : "Segarkan Screener"}
-              </span>
-            </button>
+            {/* Title + Runway inline */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-100 font-mono tracking-tight flex items-center gap-2">
+                <span>Screening Saham Calon Bagger</span>
+                <span className="text-amber-400 font-mono text-lg font-bold">(2x – 5x)</span>
+              </h1>
+              {/* Sleek Compact Runway */}
+              <div className="flex items-center gap-1 text-[10px] font-mono py-0.5 px-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
+                <span className="text-slate-500 font-semibold">RUNWAY:</span>
+                <span className="text-slate-300">1x Base</span>
+                <span className="text-indigo-400">&rarr;</span>
+                <span className="text-indigo-300">2x Double</span>
+                <span className="text-cyan-400">&rarr;</span>
+                <span className="text-cyan-300">3x Triple</span>
+                <span className="text-amber-400">&rarr;</span>
+                <span className="text-amber-300 font-bold">5x Super-Bagger</span>
+              </div>
+            </div>
+
+            {/* Subtitle */}
+            <p className="text-xs text-slate-400 max-w-3xl leading-relaxed">
+              Algoritma mendeteksi saham <span className="text-cyan-300 font-semibold">small – mid cap</span> di fase awal akumulasi institusi (<span className="text-emerald-300 font-semibold">Bandar CR3 &gt; 55%</span>), lolos kriteria tren <span className="text-indigo-300 font-semibold">Mark Minervini Stage 2</span>, <span className="text-purple-300 font-semibold">kontraksi volatilitas (VCP)</span>, serta memiliki landasan <span className="text-amber-300 font-semibold">valuasi pertumbuhan teruji</span>.
+            </p>
           </div>
 
-          {/* 4 Pillars: Quantum Propulsion Stages Pipeline */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-4 border-t border-slate-800/80">
-            {/* Pod 1: Minervini Stage 2 */}
-            <div className="relative group p-4 rounded-2xl bg-gradient-to-b from-indigo-950/30 via-slate-900/60 to-slate-900/80 border border-indigo-500/30 hover:border-indigo-400/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_25px_-5px_rgba(99,102,241,0.25)] flex flex-col justify-between overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-80" />
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                    STAGE // 01
-                  </span>
-                  <div className="p-2 rounded-xl bg-indigo-500/15 text-indigo-300 group-hover:scale-110 transition-transform">
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold text-slate-100 font-mono flex items-center gap-1.5">
-                  1. Minervini Stage 2
-                </h3>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Harga &gt; MA50 &gt; MA150 &gt; MA200 &amp; uptrend terkonfirmasi.
-                </p>
-              </div>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="text-indigo-300">Trend Template</span>
-                <span className="text-emerald-400 font-semibold">100% Valid</span>
-              </div>
-            </div>
+          {/* Action: Segarkan Screener */}
+          <button
+            onClick={() => fetchData()}
+            disabled={refreshing}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs flex items-center gap-2 shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50 shrink-0 self-start lg:self-center"
+            title="Segarkan data screener"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            <span>{refreshing ? "Memindai..." : "Segarkan Screener"}</span>
+          </button>
+        </div>
 
-            {/* Pod 2: Stealth Accumulation */}
-            <div className="relative group p-4 rounded-2xl bg-gradient-to-b from-cyan-950/30 via-slate-900/60 to-slate-900/80 border border-cyan-500/30 hover:border-cyan-400/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_25px_-5px_rgba(6,182,212,0.25)] flex flex-col justify-between overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-80" />
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                    STAGE // 02
-                  </span>
-                  <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-300 group-hover:scale-110 transition-transform">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold text-slate-100 font-mono flex items-center gap-1.5">
-                  2. Stealth Accumulation
-                </h3>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Top 3 Broker konsentrasi &gt; 55% di harga bawah sebelum markup.
-                </p>
-              </div>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="text-cyan-300">Flow Concentration</span>
-                <span className="text-cyan-400 font-semibold">CR3 &gt; 55%</span>
-              </div>
+        {/* 4 Compact Stage Pods */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-3 border-t border-slate-800/80 font-mono">
+          {/* Stage 1 */}
+          <div className="p-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-indigo-500/40 transition-colors space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] text-indigo-400 font-bold">STAGE // 01</span>
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
             </div>
+            <div className="text-xs font-bold text-slate-200">1. Minervini Stage 2</div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Harga &gt; MA50 &gt; MA150 &gt; MA200 &bull; Uptrend terkonfirmasi
+            </p>
+          </div>
 
-            {/* Pod 3: VCP Compression */}
-            <div className="relative group p-4 rounded-2xl bg-gradient-to-b from-purple-950/30 via-slate-900/60 to-slate-900/80 border border-purple-500/30 hover:border-purple-400/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_25px_-5px_rgba(168,85,247,0.25)] flex flex-col justify-between overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-80" />
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                    STAGE // 03
-                  </span>
-                  <div className="p-2 rounded-xl bg-purple-500/15 text-purple-300 group-hover:scale-110 transition-transform">
-                    <Layers className="w-4 h-4" />
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold text-slate-100 font-mono flex items-center gap-1.5">
-                  3. VCP Compression
-                </h3>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Penyusutan volume transaksi tanda pasokan penjual telah habis.
-                </p>
-              </div>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="text-purple-300">Volume Squeeze</span>
-                <span className="text-purple-400 font-semibold">Dry-Up Base</span>
-              </div>
+          {/* Stage 2 */}
+          <div className="p-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-cyan-500/40 transition-colors space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] text-cyan-400 font-bold">STAGE // 02</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
             </div>
+            <div className="text-xs font-bold text-slate-200">2. Stealth Accumulation</div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Top 3 Broker konsentrasi &gt; 55% di harga bawah sebelum markup
+            </p>
+          </div>
 
-            {/* Pod 4: Small-Mid Cap Runway */}
-            <div className="relative group p-4 rounded-2xl bg-gradient-to-b from-amber-950/30 via-slate-900/60 to-slate-900/80 border border-amber-500/30 hover:border-amber-400/70 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_25px_-5px_rgba(245,158,11,0.25)] flex flex-col justify-between overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-80" />
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                    STAGE // 04
-                  </span>
-                  <div className="p-2 rounded-xl bg-amber-500/15 text-amber-300 group-hover:scale-110 transition-transform">
-                    <Target className="w-4 h-4" />
-                  </div>
-                </div>
-                <h3 className="text-sm font-bold text-slate-100 font-mono flex items-center gap-1.5">
-                  4. Small-Mid Cap Runway
-                </h3>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Market cap terjangkau memiliki ruang lompat 100% – 400% lebih leluasa.
-                </p>
-              </div>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="text-amber-300">Alpha Velocity</span>
-                <span className="text-emerald-400 font-bold">100% – 400%</span>
-              </div>
+          {/* Stage 3 */}
+          <div className="p-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-purple-500/40 transition-colors space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] text-purple-400 font-bold">STAGE // 03</span>
+              <Layers className="w-3.5 h-3.5 text-purple-400" />
             </div>
+            <div className="text-xs font-bold text-slate-200">3. VCP Compression</div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Penyusutan volume transaksi tanda pasokan penjual telah habis
+            </p>
+          </div>
+
+          {/* Stage 4 */}
+          <div className="p-2.5 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-amber-500/40 transition-colors space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] text-amber-400 font-bold">STAGE // 04</span>
+              <Target className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+            <div className="text-xs font-bold text-slate-200">4. Small-Mid Cap Runway</div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Market cap terjangkau memiliki ruang lompat 100% – 400% lebih leluasa
+            </p>
           </div>
         </div>
       </div>
