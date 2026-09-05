@@ -32,7 +32,8 @@ class AlertSettings(BaseModel):
     enable_bsjp_alerts: bool = True
     enable_confluence_alerts: bool = True
     enable_execution_alerts: bool = True
-    min_score_filter: float = 65.0
+    min_score_filter: float = 75.0
+    max_signals_per_batch: int = 2
 
 
 class NotificationDispatcher:

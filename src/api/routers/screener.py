@@ -258,7 +258,8 @@ async def get_bsjp_candidates(min_score: float = 60.0):
         from src.alerts.dispatcher import NotificationDispatcher
         dispatcher = NotificationDispatcher.get_instance()
         if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_bsjp_alerts:
-            for c in candidates:
+            sorted_cands = sorted(candidates, key=lambda x: x.bsjp_score, reverse=True)
+            for c in sorted_cands[:dispatcher.settings.max_signals_per_batch]:
                 if c.bsjp_score >= dispatcher.settings.min_score_filter:
                     asyncio.create_task(dispatcher.dispatch_buy_signal(
                         symbol=c.symbol,
@@ -270,7 +271,7 @@ async def get_bsjp_candidates(min_score: float = 60.0):
                         target_tp2=float(c.target_sell_morning_max),
                         stop_loss=float(c.stop_loss_morning),
                         score=float(c.bsjp_score),
-                        selling_time_window="PAGI H+1: 09:05 - 09:20 WIB (Opening Spike)"
+                        selling_time_window="Pre-Closing 15:45 ➔ Pagi H+1 09:05 - 09:15 WIB"
                     ))
     except Exception as e:
         print(f"[BSJP Alert] Dispatch error: {e}")
@@ -352,7 +353,8 @@ async def get_bpjs_candidates(min_score: float = 60.0):
         from src.alerts.dispatcher import NotificationDispatcher
         dispatcher = NotificationDispatcher.get_instance()
         if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_bpjs_alerts:
-            for c in candidates:
+            sorted_cands = sorted(candidates, key=lambda x: x.bpjs_score, reverse=True)
+            for c in sorted_cands[:dispatcher.settings.max_signals_per_batch]:
                 if c.bpjs_score >= dispatcher.settings.min_score_filter:
                     tp1_v = round(c.current_price * 1.035, 0)
                     tp2_v = round(c.current_price * 1.070, 0)
@@ -367,7 +369,7 @@ async def get_bpjs_candidates(min_score: float = 60.0):
                         target_tp2=float(tp2_v),
                         stop_loss=float(sl_v),
                         score=float(c.bpjs_score),
-                        selling_time_window="SORE INI: 15:40 - 15:50 WIB (Zero Overnight)"
+                        selling_time_window="Sore Ini 15:40 - 15:50 WIB (Zero Overnight)"
                     ))
     except Exception as e:
         print(f"[BPJS Alert] Dispatch error: {e}")
@@ -442,7 +444,8 @@ async def get_pre_ara_candidates(min_score: float = 65.0):
         from src.alerts.dispatcher import NotificationDispatcher
         dispatcher = NotificationDispatcher.get_instance()
         if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_pre_ara_alerts:
-            for c in candidates:
+            sorted_cands = sorted(candidates, key=lambda x: x.pre_ara_score, reverse=True)
+            for c in sorted_cands[:dispatcher.settings.max_signals_per_batch]:
                 if c.pre_ara_score >= dispatcher.settings.min_score_filter:
                     asyncio.create_task(dispatcher.dispatch_buy_signal(
                         symbol=c.symbol,
@@ -454,7 +457,7 @@ async def get_pre_ara_candidates(min_score: float = 65.0):
                         target_tp2=float(c.ara_ceiling_price),
                         stop_loss=float(c.predicted_stop_loss_price),
                         score=float(c.pre_ara_score),
-                        selling_time_window="TP1: 09:30 - 10:15 WIB | Plafon ARA: 11:00 - 11:30 / 15:45 WIB"
+                        selling_time_window="TP1: 09:30-10:15 WIB · ARA: 15:45 WIB"
                     ))
     except Exception as e:
         print(f"[Pre-ARA Alert] Dispatch error: {e}")
@@ -767,29 +770,31 @@ async def get_institutional_buy_signals(min_score: float = 60.0):
                 }
             )
 
-            # Auto-dispatch tactical alert to Telegram if enabled
-            try:
-                from src.alerts.dispatcher import NotificationDispatcher
-                dispatcher = NotificationDispatcher.get_instance()
-                if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_confluence_alerts:
-                    if score >= dispatcher.settings.min_score_filter:
-                        asyncio.create_task(dispatcher.dispatch_buy_signal(
-                            symbol=sym,
-                            name=sig_dict["name"],
-                            sector=sig_dict["sector"],
-                            strategy="BUY_LAYAK",
-                            entry_price=float(curr_p),
-                            target_tp1=float(sig_dict["tp1_price"]),
-                            target_tp2=float(sig_dict["tp2_price"]),
-                            stop_loss=float(sig_dict["stop_loss_price"]),
-                            score=float(score),
-                            selling_time_window=sig_dict.get("selling_time_window", "Swing 3 - 15 Hari Bursa")
-                        ))
-            except Exception as e:
-                print(f"[Confluence Alert] Dispatch error: {e}")
-
     # Sort by AI Score
     signals = sorted(signals, key=lambda x: x['ai_score'], reverse=True)
+
+    # Auto-dispatch tactical alert to Telegram for top signals
+    try:
+        from src.alerts.dispatcher import NotificationDispatcher
+        dispatcher = NotificationDispatcher.get_instance()
+        if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_confluence_alerts:
+            for sig_dict in signals[:dispatcher.settings.max_signals_per_batch]:
+                if sig_dict["ai_score"] >= dispatcher.settings.min_score_filter:
+                    asyncio.create_task(dispatcher.dispatch_buy_signal(
+                        symbol=sig_dict["symbol"],
+                        name=sig_dict["name"],
+                        sector=sig_dict["sector"],
+                        strategy="BUY_LAYAK",
+                        entry_price=float(sig_dict["price"]),
+                        target_tp1=float(sig_dict["tp1_price"]),
+                        target_tp2=float(sig_dict["tp2_price"]),
+                        stop_loss=float(sig_dict["stop_loss_price"]),
+                        score=float(sig_dict["ai_score"]),
+                        selling_time_window="Swing 3 - 10 Hari Bursa"
+                    ))
+    except Exception as e:
+        print(f"[Confluence Alert] Dispatch error: {e}")
+
     return {
         "count": len(signals),
         "description": "Sinyal BUY Saham Layak Terkurasi Kuantitatif",

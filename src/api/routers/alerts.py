@@ -125,8 +125,7 @@ async def test_telegram_notification(req: TestTelegramRequest):
     )
 
     test_html = (
-        "<b>[UJI COBA NOTIFIKASI TELEGRAM]</b>\n"
-        "<i>(Pesan verifikasi integrasi bot &mdash; Data tersinkronisasi pasar riil)</i>\n\n"
+        "🧪 <i>[UJI COBA BOT TELEGRAM]</i>\n"
         f"{sample['telegram_html']}"
     )
 
