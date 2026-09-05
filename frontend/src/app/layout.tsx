@@ -5,6 +5,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { ToastProvider } from "@/components/Toast";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export default function RootLayout({
   children,
@@ -46,8 +47,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-darkBg text-slate-100 min-h-screen antialiased flex flex-col font-sans">
-        <ToastProvider>
+      <body className="bg-darkBg text-slate-100 min-h-screen antialiased flex flex-col font-sans transition-colors duration-300">
+        <ThemeProvider>
+          <ToastProvider>
           {/* Sidebar Nav */}
           <Sidebar
             isOpen={sidebarOpen}
@@ -80,6 +82,7 @@ export default function RootLayout({
             </footer>
           </div>
         </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

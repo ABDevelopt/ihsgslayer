@@ -11,6 +11,8 @@ import {
   PanelLeftOpen,
   Calculator,
   Send,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { StockUniverseItem } from "@/lib/types";
@@ -18,6 +20,7 @@ import TickerTape from "@/components/TickerTape";
 import PositionCalculatorModal from "@/components/PositionCalculatorModal";
 import TelegramAlertModal from "@/components/TelegramAlertModal";
 import { useMarketStream } from "@/hooks/useMarketStream";
+import { useTheme } from "@/context/ThemeContext";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -60,6 +63,7 @@ export default function Header({
   const [isCalcOpen, setIsCalcOpen] = useState(false);
   const [isTelegramOpen, setIsTelegramOpen] = useState(false);
   const { isConnected } = useMarketStream();
+  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [universe, setUniverse] = useState<StockUniverseItem[]>([]);
 
@@ -207,6 +211,25 @@ export default function Header({
             <kbd className="hidden sm:inline px-1 py-0.2 rounded bg-slate-800 text-[9px] text-slate-400 border border-slate-700">
               Ctrl+K
             </kbd>
+          </button>
+
+          {/* Theme Toggle: Mode Terang / Mode Gelap */}
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-amber-500/50 text-slate-300 hover:text-white transition-all text-xs font-mono flex items-center gap-1.5 shrink-0"
+            title={theme === "dark" ? "Beralih ke Mode Terang (Light Mode)" : "Beralih ke Mode Gelap (Dark Mode)"}
+          >
+            {theme === "dark" ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="hidden xl:inline text-amber-300 font-semibold">Terang</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="hidden xl:inline text-indigo-400 font-semibold">Gelap</span>
+              </>
+            )}
           </button>
 
           {/* Real-time Clock */}

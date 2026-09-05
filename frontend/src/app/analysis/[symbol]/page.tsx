@@ -33,6 +33,7 @@ import {
   Info,
   ChevronRight,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ShariaBadge } from "@/components/ShariaBadge";
@@ -53,7 +54,7 @@ export default function StockAnalysisDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"technical" | "fundamental" | "bandarmologi" | "sentiment">("technical");
+  const [activeTab, setActiveTab] = useState<"confluence" | "technical" | "fundamental" | "bandarmologi">("confluence");
   const { showToast } = useToast();
 
   const fetchAnalysis = async (sym = symbol) => {
@@ -171,6 +172,64 @@ export default function StockAnalysisDetailPage() {
   const targetTP1 = Math.round(currentPrice * 1.05);
   const targetTP2 = Math.round(currentPrice * 1.10);
   const stopLoss = Math.round(currentPrice * 0.97);
+
+  // Multi-Method Confluence & Consistency Diagnostics
+  const isFundStrong = roeVal >= 12 || pScore >= 65 || marginOfSafety > 10;
+  const isTechBullish = trendBias.includes("BULLISH") || currentPrice > ma50;
+  const isTechOversold = rsiVal < 38 || currentPrice < ma50;
+  const isBandarAccum = cr3Val >= 55 || bigPlayerSentiment === "ACCUMULATION";
+  const isDanger = !isSafe || shield?.is_danger || shield?.is_gorengan;
+
+  // Diagnosis Type & Actionable Rationale
+  let reconType = "NEUTRAL";
+  let reconTitle = "KONSOLIDASI & WAIT AND SEE";
+  let reconBadge = "bg-slate-500/20 text-slate-300 border-slate-500/30";
+  let reconDesc = "Sinyal antar metode masih berimbang di area netral. Belum ada konfirmasi breakout teknikal maupun lonjakan akumulasi yang dominan.";
+  let scalperAdvice = "Tunggu pantulan volume intraday atau momentum breakout.";
+  let swingAdvice = "Wait and see hingga harga menembus level resistance klasik.";
+  let investorAdvice = "Cicil bertahap hanya bila valuasi intrinsik terdiskon di bawah harga wajar.";
+
+  if (isDanger) {
+    reconType = "DANGER";
+    reconTitle = "BLOKIR KEAMANAN: Saham Gorengan / Danger Zone";
+    reconBadge = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+    reconDesc = "Meskipun indikator teknikal mungkin tampak volatil atau melonjak sesaat, saham ini diblokir oleh Stock Shield Engine karena beban hutang tinggi, laba minus, atau anomali perputaran volume pump & dump.";
+    scalperAdvice = "TIDAK DISARANKAN. Risiko likuiditas macet atau suspensi bursa.";
+    swingAdvice = "HINDARI. Tidak memiliki bantalan fundamental.";
+    investorAdvice = "DILARANG. Risiko kehilangan modal permanen.";
+  } else if (isFundStrong && isTechBullish && isBandarAccum) {
+    reconType = "GOLDEN_CONFLUENCE";
+    reconTitle = "GOLDEN CONFLUENCE: Seluruh Metode Selaras Positif";
+    reconBadge = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+    reconDesc = "Konvergen sempurna: Kinerja fundamental kuat menciptakan margin of safety tinggi, diiringi akumulasi konsentrasi broker bandar, dan konfirmasi uptrend teknikal di atas MA50.";
+    scalperAdvice = "Beli saat breakout resistance pivot dengan target ARA / +3% s/d +7%.";
+    swingAdvice = "STRONG BUY. Alokasi posisi optimal dengan trailing stop di bawah MA20.";
+    investorAdvice = "Layak akumulasi porsi inti portofolio jangka menengah-panjang.";
+  } else if (isFundStrong && !isTechBullish) {
+    reconType = "VALUE_DIVERGENCE";
+    reconTitle = "DIVERGENSI VALUE: Fundamental Solid vs Teknikal Melemah / Downtrend";
+    reconBadge = "bg-cyan-500/20 text-cyan-400 border-cyan-500/30";
+    reconDesc = "Perusahaan sangat menguntungkan (ROE sehat & valuasi diskon), namun tren harga jangka pendek sedang terkoreksi. Hindari agresif menangkap pisau jatuh (knife-catching); tunggu konfirmasi reversal di area support kunci.";
+    scalperAdvice = "Hindari entry sebelum terbentuk candle reversal pembalikan arah.";
+    swingAdvice = "Buy on Weakness: Beli bertahap di Support 1 atau Support 2 dengan stop loss ketat.";
+    investorAdvice = "Zona Emas Akumulasi: Sangat cocok untuk Dollar-Cost Averaging (DCA) kuartalan.";
+  } else if (!isFundStrong && isTechBullish) {
+    reconType = "MOMENTUM_DIVERGENCE";
+    reconTitle = "DIVERGENSI MOMENTUM: Teknikal Melesat vs Fundamental Kurang Mendukung";
+    reconBadge = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+    reconDesc = "Tren harga sedang naik kencang didorong momentum likuiditas sesaat atau sentimen sektoral, tetapi valuasi mahal atau laba belum terbukti stabil. Peluang trading tinggi namun dengan proteksi risiko ketat.";
+    scalperAdvice = "Zona Utama Scalping: Ambil peluang momentum cepat, disiplin TP 2% - 5%.";
+    swingAdvice = "Wajib trailing stop ketat (-2.5% s/d -3%). Jangan ditinggal tanpa pengawasan.";
+    investorAdvice = "HINDARI INVESTASI. Valuasi rawan devaluasi saat momentum mereda.";
+  } else if (isBandarAccum && !isTechBullish) {
+    reconType = "STEALTH_ACCUMULATION";
+    reconTitle = "DIVERGENSI BANDARMOLOGI: Akumulasi Senyap (Stealth Accumulation)";
+    reconBadge = "bg-indigo-500/20 text-indigo-400 border-indigo-500/30";
+    reconDesc = "Top broker terdeteksi mengumpulkan barang secara konsentrasi (CR3 tinggi) di harga bawah, tetapi harga sengaja dijaga mendatar (sideways). Ini adalah fase persiapan sebelum markup harga besar.";
+    scalperAdvice = "Kurang cocok untuk scalping karena pergerakan harga cenderung tenang/lambat.";
+    swingAdvice = "Akumulasi di dekat Bandar VWAP. Sabar menunggu ledakan volume breakout.";
+    investorAdvice = "Layak dikoleksi di harga modal bandar untuk potensi multibagger.";
+  }
 
   const handleCopyPlan = () => {
     const planText = `RENCANA TRADING IHSG SLAYER
@@ -323,7 +382,17 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
           </div>
 
           {/* Tab Selector */}
-          <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 flex-wrap">
+            <button
+              onClick={() => setActiveTab("confluence")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === "confluence"
+                  ? "bg-indigo-600 text-white shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" /> Konfluensi Lintas Metode
+            </button>
             <button
               onClick={() => setActiveTab("technical")}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
@@ -356,6 +425,201 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
             </button>
           </div>
         </div>
+
+        {/* TAB 0: MATRIKS KONFLUENSI & REKONSILIASI MULTI-METODE */}
+        {activeTab === "confluence" && (
+          <div className="space-y-6 animate-in fade-in">
+            {/* 1. Header Diagnostics Card */}
+            <div className={`p-5 rounded-2xl border bg-slate-900/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${reconBadge}`}>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    SINTESIS KONSISTENSI AI
+                  </span>
+                  <span className="text-xs font-mono font-black">{reconTitle}</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed max-w-3xl mt-1">
+                  {reconDesc}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-right font-mono shrink-0">
+                <span className="text-[9px] text-slate-400 block uppercase">Rekomendasi Terpadu</span>
+                <span className="text-sm font-black text-emerald-400">{verdictCategory}</span>
+              </div>
+            </div>
+
+            {/* 2. Side-by-Side 4-Method Comparison Matrix */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+              {/* Fundamental */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                      <Scale className="w-3.5 h-3.5 text-cyan-400" /> 1. Fundamental
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isFundStrong ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"}`}>
+                      {isFundStrong ? "SOLID" : "SEDANG/WAJAR"}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">ROE:</span>
+                      <span className="text-slate-200 font-bold">{roeVal.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">PER:</span>
+                      <span className="text-slate-200 font-bold">{perVal.toFixed(1)}x</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Graham MoS:</span>
+                      <span className={`font-bold ${marginOfSafety >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {marginOfSafety >= 0 ? "+" : ""}{marginOfSafety.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-800/60 leading-tight">
+                  {isFundStrong ? "Laba bertumbuh kuat dengan valuasi terlindungi margin of safety." : "Valuasi mencerminkan ekspektasi pertumbuhan wajar industri."}
+                </p>
+              </div>
+
+              {/* Teknikal */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> 2. Teknikal
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isTechBullish ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"}`}>
+                      {trendBias.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">RSI (14):</span>
+                      <span className="text-slate-200 font-bold">{rsiVal.toFixed(1)} ({rsiStatus})</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Posisi MA50:</span>
+                      <span className={`font-bold ${currentPrice >= ma50 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {currentPrice >= ma50 ? "Di Atas (+)" : "Di Bawah (-)"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">MACD:</span>
+                      <span className="text-slate-200 font-bold">{macdStatus.replace(/_/g, " ")}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-800/60 leading-tight">
+                  {isTechBullish ? "Struktur harga berada dalam fase ekspansi momentum positif." : "Harga sedang berkonsolidasi atau mencari pijakan support baru."}
+                </p>
+              </div>
+
+              {/* Bandarmologi */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" /> 3. Bandarmologi
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isBandarAccum ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-800 text-slate-400 border border-slate-700"}`}>
+                      {isBandarAccum ? "AKUMULASI" : "NETRAL"}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Konsentrasi CR3:</span>
+                      <span className="text-cyan-400 font-bold">{cr3Val.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Bandar VWAP:</span>
+                      <span className="text-slate-200 font-bold">Rp {Math.round(bandarVWAP).toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Posisi Entry:</span>
+                      <span className={`font-bold ${isGoldenEntry ? "text-emerald-400" : "text-amber-400"}`}>
+                        {isGoldenEntry ? "Golden Entry" : "Markup"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-800/60 leading-tight">
+                  {isBandarAccum ? "Institusi besar mengontrol pasokan barang di harga akumulasi." : "Pergerakan barang normal dan tersebar di pasar reguler."}
+                </p>
+              </div>
+
+              {/* Stock Shield Protection */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                      <Lock className="w-3.5 h-3.5 text-amber-400" /> 4. Stock Shield
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isSafe ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"}`}>
+                      {isSafe ? "LOLOS PROTEKSI" : "DANGER"}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Anti-Gorengan:</span>
+                      <span className="text-emerald-400 font-bold">{shield?.is_gorengan ? "Terdeteksi (!)" : "Aman"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Likuiditas Rata2:</span>
+                      <span className="text-slate-200 font-bold">{formatRupiah(data.adtv_20 || 5_000_000_000)}/hr</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Volatilitas ATR:</span>
+                      <span className="text-slate-200 font-bold">{atrVal.toFixed(0)} ({((atrVal/currentPrice)*100).toFixed(1)}%)</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-800/60 leading-tight">
+                  {isSafe ? "Memenuhi standar likuiditas aman dan bebas risiko jebakan gocap." : "Terdapat peringatan likuiditas atau volatilitas tidak wajar."}
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Timeframe Horizon Action Guide */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-950/30 via-slate-900/70 to-slate-900/70 border border-indigo-500/30 space-y-4">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-400" />
+                <h4 className="text-xs font-mono font-bold text-slate-100 uppercase tracking-wider">
+                  Panduan Eksekusi Berdasarkan Gaya &amp; Horison Trading
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-cyan-400 font-bold uppercase">Scalper (Intraday)</span>
+                    <span className="text-[9px] text-slate-500">09:15 - 15:45 WIB</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">{scalperAdvice}</p>
+                  <span className="text-[9px] text-slate-500 block pt-1 border-t border-slate-800/80">Fokus: Volume Spike &amp; Pivot R1</span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-400 font-bold uppercase">Swing Trader</span>
+                    <span className="text-[9px] text-slate-500">3 - 20 Hari Bursa</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">{swingAdvice}</p>
+                  <span className="text-[9px] text-slate-500 block pt-1 border-t border-slate-800/80">Fokus: MA50 Trend &amp; Bandar VWAP</span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-amber-400 font-bold uppercase">Investor</span>
+                    <span className="text-[9px] text-slate-500">3 - 24 Bulan</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">{investorAdvice}</p>
+                  <span className="text-[9px] text-slate-500 block pt-1 border-t border-slate-800/80">Fokus: ROE &gt; 15% &amp; Graham Diskon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TAB 1: PENJELASAN TEKNIKAL DETAIL */}
         {activeTab === "technical" && (
