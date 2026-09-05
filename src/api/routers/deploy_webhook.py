@@ -19,8 +19,9 @@ LOCAL_DEPLOY_LOG = os.path.join(os.path.dirname(__file__), "..", "..", "..", "de
 
 def _run_deploy_task():
     """Execute deploy.sh in the background."""
-    script_path = "/home/ubuntu/ihsgslayer/deploy.sh"
-    log_file = DEPLOY_LOG_FILE if os.path.exists("/home/ubuntu") else LOCAL_DEPLOY_LOG
+    script_path = "/var/www/ihsgslayer/deploy.sh" if os.path.exists("/var/www/ihsgslayer/deploy.sh") else "/home/ubuntu/ihsgslayer/deploy.sh"
+    app_cwd = os.path.dirname(script_path)
+    log_file = os.path.join(app_cwd, "deploy.log") if os.path.exists(app_cwd) else LOCAL_DEPLOY_LOG
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as lf:
@@ -32,7 +33,7 @@ def _run_deploy_task():
                 ["bash", script_path],
                 stdout=lf,
                 stderr=subprocess.STDOUT,
-                cwd="/home/ubuntu/ihsgslayer"
+                cwd=app_cwd
             )
         else:
             lf.write(f"Notice: Linux deploy script '{script_path}' not found (running on non-server environment).\n")

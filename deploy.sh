@@ -8,7 +8,11 @@ set -e
 
 echo "=== [$(date '+%Y-%m-%d %H:%M:%S')] Starting Auto-Deploy ==="
 
-APP_DIR="/home/ubuntu/ihsgslayer"
+if [ -d "/var/www/ihsgslayer" ]; then
+    APP_DIR="/var/www/ihsgslayer"
+else
+    APP_DIR="/home/ubuntu/ihsgslayer"
+fi
 cd "$APP_DIR"
 
 # 1. Fetch & Reset to latest main from GitHub
