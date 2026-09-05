@@ -8,6 +8,7 @@ import {
   PortfolioSummary,
   EvaluationSummary,
   EvaluatedTrade,
+  StockRankingItem,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
@@ -131,6 +132,22 @@ export const api = {
 
   async evaluateNow(): Promise<any> {
     return fetchJson("/evaluation/evaluate-now", { method: "POST" });
+  },
+
+  async getStockRankings(
+    minSignals = 1,
+    strategy?: string,
+    tradingCategory?: string,
+    sortBy = "win_rate",
+    limit = 50
+  ): Promise<{ count: number; min_signals: number; sort_by: string; rankings: StockRankingItem[] }> {
+    const params = new URLSearchParams();
+    params.append("min_signals", minSignals.toString());
+    params.append("sort_by", sortBy);
+    params.append("limit", limit.toString());
+    if (strategy && strategy !== "ALL") params.append("strategy", strategy);
+    if (tradingCategory && tradingCategory !== "ALL") params.append("trading_category", tradingCategory);
+    return fetchJson(`/evaluation/stock-rankings?${params.toString()}`);
   },
 
   async getSignalHistory(signalType?: string, limit = 100): Promise<any> {

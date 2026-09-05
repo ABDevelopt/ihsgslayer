@@ -83,6 +83,40 @@ async def get_evaluation_records(
     }
 
 
+@router.get("/stock-rankings")
+async def get_stock_rankings(
+    min_signals: int = Query(1, ge=1, le=100, description="Minimum completed trades evaluated for this emiten"),
+    strategy: Optional[str] = Query(default=None, description="Filter by strategy: BPJS, BSJP, PRE_ARA, BUY_LAYAK, or ALL"),
+    trading_category: Optional[str] = Query(default=None, description="Filter by 3 Pillars: SCALPING, SWING, INVEST, or ALL"),
+    sort_by: str = Query(default="win_rate", description="Sort order: win_rate, total_pnl, total_signals, avg_pnl"),
+    limit: int = Query(default=50, ge=1, le=200)
+):
+    """
+    Get top performing emitens ranked by win rate, total realized gain, and signal frequency.
+    Aggregated from real-world post-trade audit data.
+    """
+    clean_strat = strategy if isinstance(strategy, str) else None
+    clean_cat = trading_category if isinstance(trading_category, str) else None
+    clean_sort = sort_by if isinstance(sort_by, str) else "win_rate"
+    clean_min = min_signals if isinstance(min_signals, int) else 1
+    clean_limit = limit if isinstance(limit, int) else 50
+
+    rankings = audit_db.get_stock_rankings(
+        min_signals=clean_min,
+        strategy=clean_strat,
+        trading_category=clean_cat,
+        sort_by=clean_sort,
+        limit=clean_limit
+    )
+    return {
+        "count": len(rankings),
+        "min_signals": clean_min,
+        "sort_by": clean_sort,
+        "rankings": rankings
+    }
+
+
+
 @router.get("/history")
 async def get_signal_history_records(
     signal_type: Optional[str] = Query(None, description="Filter by signal type: BUY_INSTITUSIONAL, BPJS_PAGI, BSJP_SORE, or ALL"),

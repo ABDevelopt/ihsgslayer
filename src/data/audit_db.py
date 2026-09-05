@@ -466,3 +466,85 @@ def get_categories_performance_summary() -> Dict[str, Any]:
             })
 
     return result
+
+
+def get_stock_rankings(
+    min_signals: int = 1,
+    strategy: Optional[str] = None,
+    trading_category: Optional[str] = None,
+    sort_by: str = "win_rate",
+    limit: int = 50
+) -> List[Dict[str, Any]]:
+    """
+    Get ranked leaderboard of stocks/emitens based on win rate, total PnL, and audit frequency.
+    Allows filtering by minimum signals, strategy, and trading pillar (SCALPING, SWING, INVEST).
+    """
+    where_clauses = ["1=1"]
+    params: List[Any] = []
+
+    if trading_category and isinstance(trading_category, str) and trading_category.upper() != "ALL":
+        cat = trading_category.upper()
+        where_clauses.append("(trading_category = ? OR (? = 'SWING' AND strategy_type IN ('BSJP', 'BUY_LAYAK', 'HYBRID_QUANT', 'CONFLUENCE', 'SMARTPICK')) OR (? = 'SCALPING' AND strategy_type IN ('BPJS', 'PRE_ARA')))")
+        params.extend([cat, cat, cat])
+
+    if strategy and isinstance(strategy, str) and strategy.upper() != "ALL":
+        strat = strategy.upper()
+        if strat == "BUY_LAYAK":
+            where_clauses.append("strategy_type IN ('BUY_LAYAK', 'HYBRID_QUANT')")
+        else:
+            where_clauses.append("strategy_type = ?")
+            params.append(strat)
+
+    where_sql = " AND ".join(where_clauses)
+
+    if sort_by == "total_pnl":
+        order_by = "total_pnl_pct DESC, win_rate_pct DESC, evaluated_count DESC"
+    elif sort_by == "total_signals":
+        order_by = "total_signals DESC, win_rate_pct DESC, total_pnl_pct DESC"
+    elif sort_by == "avg_pnl":
+        order_by = "avg_pnl_pct DESC, win_rate_pct DESC"
+    else:
+        order_by = "win_rate_pct DESC, evaluated_count DESC, total_pnl_pct DESC"
+
+    query = f"""
+        SELECT 
+            symbol,
+            MAX(name) as name,
+            MAX(sector) as sector,
+            MAX(is_sharia) as is_sharia,
+            COUNT(*) as total_signals,
+            SUM(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN 1 ELSE 0 END) as evaluated_count,
+            SUM(CASE WHEN outcome_status = 'WIN' THEN 1 ELSE 0 END) as win_count,
+            SUM(CASE WHEN outcome_status = 'LOSS' THEN 1 ELSE 0 END) as loss_count,
+            SUM(CASE WHEN outcome_status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
+            ROUND(CAST(SUM(CASE WHEN outcome_status = 'WIN' THEN 1 ELSE 0 END) AS REAL) / NULLIF(SUM(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN 1 ELSE 0 END), 0) * 100.0, 1) as win_rate_pct,
+            ROUND(AVG(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN realized_pnl_pct ELSE NULL END), 2) as avg_pnl_pct,
+            ROUND(SUM(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN realized_pnl_pct ELSE 0 END), 2) as total_pnl_pct,
+            ROUND(MAX(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN realized_pnl_pct ELSE NULL END), 2) as best_trade_pct,
+            ROUND(MIN(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN realized_pnl_pct ELSE NULL END), 2) as worst_trade_pct,
+            GROUP_CONCAT(DISTINCT strategy_type) as strategies,
+            MAX(signal_date) as last_signal_date
+        FROM signal_evaluations
+        WHERE {where_sql}
+        GROUP BY symbol
+        HAVING evaluated_count >= ?
+        ORDER BY {order_by}
+        LIMIT ?;
+    """
+    params.extend([max(1, min_signals), limit])
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+    results = []
+    for r in rows:
+        d = dict(r)
+        d["is_sharia"] = bool(d.get("is_sharia"))
+        d["clean_symbol"] = (d.get("symbol") or "").replace(".JK", "")
+        strat_str = d.get("strategies") or ""
+        d["strategies_list"] = [s.strip() for s in strat_str.split(",") if s.strip()]
+        results.append(d)
+    return results
+

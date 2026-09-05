@@ -139,3 +139,19 @@ def test_stock_evaluation_endpoint():
     assert "total_signals" in data
     assert "strategies" in data
     assert "records" in data
+
+
+def test_stock_rankings_endpoint():
+    res = client.get("/api/v1/evaluation/stock-rankings?min_signals=1&sort_by=win_rate&limit=10")
+    assert res.status_code == 200
+    data = res.json()
+    assert "count" in data
+    assert "rankings" in data
+    assert len(data["rankings"]) > 0
+    first = data["rankings"][0]
+    assert "clean_symbol" in first
+    assert "win_rate_pct" in first
+    assert "total_pnl_pct" in first
+    assert "best_trade_pct" in first
+    assert "strategies_list" in first
+

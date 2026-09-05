@@ -544,3 +544,25 @@ export interface ForwardTestPortfolio {
   }[];
   bot_logs?: BotLogEntry[];
 }
+
+export interface StockRankingItem {
+  symbol: string;
+  clean_symbol: string;
+  name: string;
+  sector: string;
+  is_sharia: boolean;
+  total_signals: number;
+  evaluated_count: number;
+  win_count: number;
+  loss_count: number;
+  pending_count: number;
+  win_rate_pct: number;
+  avg_pnl_pct: number;
+  total_pnl_pct: number;
+  best_trade_pct: number;
+  worst_trade_pct: number;
+  strategies: string;
+  strategies_list: string[];
+  last_signal_date: string;
+}
+
