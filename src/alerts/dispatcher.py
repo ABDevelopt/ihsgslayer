@@ -92,10 +92,11 @@ class NotificationDispatcher:
         stop_loss: float,
         score: float,
         selling_time_window: str = "",
+        win_rate: Optional[str] = None,
         force: bool = False
     ) -> Dict[str, Any]:
         """
-        Build and broadcast step-by-step BUY tactical playbook to active channels.
+        Build and broadcast concise BUY tactical playbook to active channels.
         """
         today_key = f"{symbol}_{strategy}_{datetime.now().strftime('%Y-%m-%d')}"
         if not force and today_key in self.sent_cooldown_map:
@@ -112,7 +113,8 @@ class NotificationDispatcher:
             target_tp2=target_tp2,
             stop_loss=stop_loss,
             score=score,
-            selling_time_window=selling_time_window
+            selling_time_window=selling_time_window,
+            win_rate=win_rate
         )
 
         results = {}

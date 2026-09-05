@@ -390,8 +390,35 @@ def get_stock_evaluations(symbol: str, limit: int = 500) -> List[Dict[str, Any]]
                 d["eval_metadata"] = json.loads(d["eval_metadata"])
             except:
                 d["eval_metadata"] = {}
-        results.append(d)
     return results
+
+
+def get_emiten_win_rate_stats(symbol: str) -> Optional[Dict[str, Any]]:
+    """
+    Get win rate % and total historical trade audit count for a specific emiten.
+    """
+    clean_sym = symbol.upper().replace(".JK", "")
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_signals,
+                SUM(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN 1 ELSE 0 END) as evaluated_count,
+                SUM(CASE WHEN outcome_status = 'WIN' THEN 1 ELSE 0 END) as win_count,
+                ROUND(CAST(SUM(CASE WHEN outcome_status = 'WIN' THEN 1 ELSE 0 END) AS REAL) / NULLIF(SUM(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN 1 ELSE 0 END), 0) * 100.0, 1) as win_rate_pct,
+                ROUND(AVG(CASE WHEN outcome_status IN ('WIN', 'LOSS') THEN realized_pnl_pct ELSE NULL END), 1) as avg_pnl_pct
+            FROM signal_evaluations
+            WHERE REPLACE(symbol, '.JK', '') = ?;
+        """, (clean_sym,))
+        row = cursor.fetchone()
+        if row and row["evaluated_count"] and row["evaluated_count"] > 0:
+            return {
+                "evaluated_count": row["evaluated_count"],
+                "win_count": row["win_count"],
+                "win_rate_pct": row["win_rate_pct"],
+                "avg_pnl_pct": row["avg_pnl_pct"]
+            }
+    return None
 
 
 def get_distinct_audit_dates() -> List[str]:

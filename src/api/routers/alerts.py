@@ -201,6 +201,7 @@ async def preview_tactical_playbook(
 
 
 class TestSignalDispatchRequest(BaseModel):
+    action: Optional[str] = "BUY"  # "BUY" or "SELL"
     strategy: Optional[str] = "AUTO"  # "AUTO", "BPJS", "PRE_ARA", "BSJP", "BUY_LAYAK"
     symbol: Optional[str] = None
     force: bool = True
@@ -209,7 +210,7 @@ class TestSignalDispatchRequest(BaseModel):
 @router.post("/test-signal-dispatch")
 async def trigger_signal_dispatch(req: TestSignalDispatchRequest = Body(default_factory=TestSignalDispatchRequest)):
     """
-    Kirim uji coba notifikasi Telegram saat sinyal trading kuantitatif terdeteksi / keluar.
+    Kirim uji coba notifikasi Telegram saat sinyal trading kuantitatif terdeteksi / keluar (BUY & SELL).
     Mengambil kandidat sinyal riil tertinggi dari algoritma pasar aktif.
     """
     from src.data.universe import FULL_IDX_UNIVERSE
@@ -221,12 +222,115 @@ async def trigger_signal_dispatch(req: TestSignalDispatchRequest = Body(default_
         _build_current_universe_metrics
     )
 
+    action = (req.action or "BUY").upper()
+
+    # Handle SELL execution notification test
+    if action == "SELL":
+        sym = req.symbol.upper() if req.symbol else "IRSX.JK"
+        if not sym.endswith(".JK"):
+            sym += ".JK"
+        strat_used = req.strategy if req.strategy and req.strategy != "AUTO" else "PRE_ARA"
+        p_entry = 424.0
+        p_exit = 446.0
+        pnl_pct = round(((p_exit - p_entry) / p_entry) * 100.0, 1)
+        pnl_amt = round((p_exit - p_entry) * 50 * 100, 0)
+        dispatch_res = await dispatcher.dispatch_sell_execution(
+            symbol=sym,
+            strategy=strat_used,
+            action_type="TAKE_PROFIT_1",
+            entry_price=p_entry,
+            exit_price=p_exit,
+            shares_lot=50,
+            realized_pnl_amt=pnl_amt,
+            realized_pnl_pct=pnl_pct,
+            holding_duration="1 Hari Bursa"
+        )
+        return {
+            "status": "SUCCESS",
+            "message": f"Notifikasi SELL (Realisasi) untuk #{sym.replace('.JK', '')} berhasil dikirim ke Telegram!",
+            "action": "SELL",
+            "signal_dispatched": {
+                "symbol": sym,
+                "strategy": strat_used,
+                "action_type": "TAKE_PROFIT_1",
+                "entry_price": p_entry,
+                "exit_price": p_exit,
+                "realized_pnl_pct": pnl_pct,
+                "realized_pnl_amt": pnl_amt
+            },
+            "dispatch_result": dispatch_res
+        }
+
     strat = (req.strategy or "AUTO").upper()
     target_candidate = None
     chosen_strat = strat
 
-    # 1. If strategy is BPJS or AUTO
-    if strat in ["BPJS", "AUTO"]:
+    # 1. If strategy is BUY_LAYAK or CONFLUENCE
+    if strat in ["BUY_LAYAK", "CONFLUENCE"]:
+        try:
+            res = await get_institutional_buy_signals(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "BUY_LAYAK"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "BUY_LAYAK"
+        except Exception:
+            pass
+
+    # 2. If strategy is BPJS
+    if not target_candidate and strat in ["BPJS"]:
+        try:
+            res = await get_bpjs_candidates(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "BPJS"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "BPJS"
+        except Exception:
+            pass
+
+    # 3. If strategy is BSJP
+    if not target_candidate and strat in ["BSJP"]:
+        try:
+            res = await get_bsjp_candidates(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "BSJP"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "BSJP"
+        except Exception:
+            pass
+
+    # 4. If strategy is PRE_ARA
+    if not target_candidate and strat in ["PRE_ARA"]:
+        try:
+            res = await get_pre_ara_candidates(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "PRE_ARA"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "PRE_ARA"
+        except Exception:
+            pass
+
+    # 5. If strategy is AUTO, check in order: BPJS -> PRE_ARA -> BSJP -> BUY_LAYAK
+    if not target_candidate and strat == "AUTO":
         try:
             res = await get_bpjs_candidates(min_score=50.0)
             cands = res.get("candidates", [])
