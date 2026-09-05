@@ -88,7 +88,7 @@ async def detect_telegram_chat_id(bot_token: Optional[str] = None):
 async def test_telegram_notification(req: TestTelegramRequest):
     """Send a real step-by-step sample playbook to Telegram with live consistent data."""
     from src.alerts.telegram_bot import TelegramAlertBot
-    from src.api.routers.stocks import get_stock_details
+    from src.api.routers.screener import _build_current_universe_metrics
 
     symbol = "JECC.JK"
     name = "Jembo Cable Company Tbk"
@@ -97,14 +97,13 @@ async def test_telegram_notification(req: TestTelegramRequest):
     entry_p = 665.0
 
     try:
-        details = await get_stock_details("JECC")
-        if details:
-            name = details.get("name", name)
-            sector = details.get("sector", sector)
-            if details.get("price") and details.get("price") > 0:
-                entry_p = float(details["price"])
-            if details.get("ai_score") and "ai_score" in details["ai_score"]:
-                real_score = float(details["ai_score"]["ai_score"])
+        metrics = _build_current_universe_metrics()
+        stock_metric = next((m for m in metrics if m["symbol"] == symbol or m["symbol"].replace(".JK", "") == "JECC"), None)
+        if stock_metric:
+            real_score = round(float(stock_metric.get("ai_score", 56.6)), 1)
+            entry_p = float(stock_metric.get("price", 665.0) or 665.0)
+            name = stock_metric.get("name", name)
+            sector = stock_metric.get("sector", sector)
     except Exception:
         pass
 
