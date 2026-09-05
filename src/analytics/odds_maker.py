@@ -140,5 +140,5 @@ class OddsMakerEngine:
             "grade_color": grade_color,
             "assessment": assessment,
             "tested_regime": reg_key,
-            "is_golden_entry_applied": is_golden_entry
+            "is_golden_entry_applied": bool(is_golden_entry)
         }

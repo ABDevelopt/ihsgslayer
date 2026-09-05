@@ -605,7 +605,7 @@ class PortfolioAdvisorEngine:
             "symbol": symbol,
             "name": holding.get("name") or symbol,
             "sector": holding.get("sector", "General"),
-            "is_sharia": holding.get("is_sharia", True),
+            "is_sharia": bool(holding.get("is_sharia", True)),
             "shares_lot": shares_lot,
             "entry_price": entry_price,
             "current_price": curr_price,
@@ -638,17 +638,17 @@ class PortfolioAdvisorEngine:
                 "cr5_pct": deep_bandar.get("cr5_pct", 65.0),
                 "bandar_vwap": bandar_vwap,
                 "distance_to_bandar_pct": dist_bandar,
-                "is_golden_entry": is_golden_entry,
+                "is_golden_entry": bool(is_golden_entry),
                 "volume_ratio": volume_ratio,
                 "foreign_flow": foreign_bias,
                 "top_buyers": deep_bandar.get("top_buyers", []),
-                "is_accumulating": is_foreign_accum,
+                "is_accumulating": bool(is_foreign_accum),
                 "summary_desc": deep_bandar.get("summary_desc", "")
             },
             "ai_score": {
                 "score": ai_score,
                 "safety_badge": safety_badge,
-                "is_gorengan": is_gorengan
+                "is_gorengan": bool(is_gorengan)
             },
             "odds_maker": OddsMakerEngine.calculate_trade_odds(
                 pattern="HOLDING_ACCUMULATION" if is_foreign_accum else "AREA_DEMAND",
