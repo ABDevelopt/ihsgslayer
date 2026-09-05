@@ -39,6 +39,51 @@ async def update_alert_settings(settings: AlertSettings):
     return {"status": "SUCCESS", "message": "Pengaturan notifikasi berhasil disimpan.", "settings": dispatcher.settings.model_dump()}
 
 
+@router.get("/detect-chat-id")
+async def detect_telegram_chat_id(bot_token: Optional[str] = None):
+    """
+    Auto-detect the latest chat_id by querying Telegram getUpdates.
+    Useful when user clicked /start in the bot.
+    """
+    token = bot_token or dispatcher.settings.telegram_bot_token
+    if not token:
+        raise HTTPException(status_code=400, detail="Bot Token belum diisi.")
+    
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(f"https://api.telegram.org/bot{token}/getUpdates")
+            data = resp.json()
+            if not data.get("ok"):
+                raise HTTPException(status_code=400, detail=f"Telegram API Error: {data.get('description')}")
+            
+            updates = data.get("result", [])
+            if not updates:
+                return {
+                    "status": "WAITING",
+                    "message": "Belum ada pesan yang diterima oleh bot. Buka https://t.me/ihsgslayer_bot di Telegram lalu klik 'Start' atau kirim pesan.",
+                    "chat_id": None
+                }
+            
+            # Get latest update
+            latest = updates[-1]
+            chat = latest.get("message", {}).get("chat", {}) or latest.get("channel_post", {}).get("chat", {})
+            chat_id = str(chat.get("id"))
+            first_name = chat.get("first_name", "")
+            username = chat.get("username", "")
+            title = chat.get("title", "")
+            
+            return {
+                "status": "SUCCESS",
+                "chat_id": chat_id,
+                "name": title or first_name or username,
+                "type": chat.get("type", "private"),
+                "message": f"Ditemukan Chat ID: {chat_id} ({title or first_name or username})"
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/test-telegram")
 async def test_telegram_notification(req: TestTelegramRequest):
     """Send a real step-by-step sample playbook to Telegram."""
@@ -60,7 +105,7 @@ async def test_telegram_notification(req: TestTelegramRequest):
     bot = TelegramAlertBot(bot_token=req.bot_token, chat_id=req.chat_id)
     success = await bot.send_message(
         text=sample["telegram_html"],
-        inline_button_url="http://localhost:3300/analysis/JECC.JK",
+        inline_button_url="http://43.163.98.53/analysis/JECC.JK",
         button_text="[ANALISIS] Buka Analisis #JECC"
     )
 

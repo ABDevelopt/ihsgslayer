@@ -35,13 +35,15 @@ class TelegramAlertBot:
         }
 
         if inline_button_url:
-            payload["reply_markup"] = {
-                "inline_keyboard": [
-                    [
-                        {"text": button_text, "url": inline_button_url}
+            cleaned_url = inline_button_url.replace("http://localhost:3300", "http://43.163.98.53").replace("http://127.0.0.1:3300", "http://43.163.98.53")
+            if not ("localhost" in cleaned_url or "127.0.0.1" in cleaned_url):
+                payload["reply_markup"] = {
+                    "inline_keyboard": [
+                        [
+                            {"text": button_text, "url": cleaned_url}
+                        ]
                     ]
-                ]
-            }
+                }
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:

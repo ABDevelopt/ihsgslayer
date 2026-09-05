@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Bell, Send, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { X, Bell, Send, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Eye, EyeOff, ExternalLink, Zap } from "lucide-react";
 
 interface TelegramAlertModalProps {
   isOpen: boolean;
@@ -39,8 +39,41 @@ export default function TelegramAlertModal({ isOpen, onClose }: TelegramAlertMod
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [testing, setTesting] = useState<boolean>(false);
+  const [detectingChatId, setDetectingChatId] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [showToken, setShowToken] = useState<boolean>(false);
+
+  const handleDetectChatId = async () => {
+    if (!settings.telegram_bot_token) {
+      setFeedback({ type: "error", message: "Masukkan Bot Token terlebih dahulu." });
+      return;
+    }
+    setDetectingChatId(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(`${API_BASE}/alerts/detect-chat-id?bot_token=${encodeURIComponent(settings.telegram_bot_token)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Gagal mendeteksi Chat ID.");
+      }
+      if (data.status === "SUCCESS" && data.chat_id) {
+        setSettings((prev) => ({ ...prev, telegram_chat_id: data.chat_id }));
+        setFeedback({
+          type: "success",
+          message: `[TERDETEKSI] Chat ID berhasil ditemukan: ${data.chat_id} (${data.name || "Akun Telegram"}). Jangan lupa klik 'Simpan Pengaturan'!`,
+        });
+      } else {
+        setFeedback({
+          type: "error",
+          message: data.message || "Belum ada pesan masuk. Buka bot di Telegram, klik Start, lalu klik tombol ini lagi.",
+        });
+      }
+    } catch (err: any) {
+      setFeedback({ type: "error", message: err.message || "Gagal menghubungi Telegram." });
+    } finally {
+      setDetectingChatId(false);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -187,19 +220,30 @@ export default function TelegramAlertModal({ isOpen, onClose }: TelegramAlertMod
 
               {/* Bot Guide Card */}
               <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                <span className="font-mono font-bold text-slate-200 uppercase tracking-wider text-[11px] block">
-                  Panduan Menghubungkan Telegram
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-slate-200 uppercase tracking-wider text-[11px] block">
+                    Panduan Cepat Menghubungkan Bot
+                  </span>
+                  <a
+                    href="https://t.me/ihsgslayer_bot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-mono text-sky-400 hover:text-sky-300 flex items-center gap-1 underline"
+                  >
+                    <span>Buka @ihsgslayer_bot</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </div>
                 <ol className="list-decimal list-inside space-y-1 text-slate-400 font-mono text-[11px]">
                   <li>
-                    Buka Telegram dan chat dengan <span className="text-sky-400">@BotFather</span> &rarr; ketik{" "}
-                    <code className="bg-slate-800 px-1 py-0.5 rounded text-slate-300">/newbot</code> untuk membuat bot dan menyalin token.
+                    Buka link <a href="https://t.me/ihsgslayer_bot" target="_blank" rel="noopener noreferrer" className="text-sky-400 underline font-bold">t.me/ihsgslayer_bot</a> di Telegram Anda lalu tekan <strong>START</strong>.
                   </li>
                   <li>
-                    Kirim pesan apa saja ke bot Anda, lalu chat dengan{" "}
-                    <span className="text-sky-400">@userinfobot</span> untuk mendapatkan <strong>Chat ID</strong> numerik Anda.
+                    Klik tombol <strong className="text-sky-300">"Deteksi Otomatis"</strong> di atas kolom Chat ID untuk mengisi ID Telegram Anda secara instan.
                   </li>
-                  <li>Tempelkan Token dan Chat ID pada kolom di bawah lalu klik tombol uji coba.</li>
+                  <li>
+                    Klik <strong>"Uji Coba Notifikasi"</strong> untuk memverifikasi penerimaan sinyal playbook taktis.
+                  </li>
                 </ol>
               </div>
 
@@ -244,9 +288,20 @@ export default function TelegramAlertModal({ isOpen, onClose }: TelegramAlertMod
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-                    Telegram Chat ID
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                      Telegram Chat ID
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleDetectChatId}
+                      disabled={detectingChatId || !settings.telegram_bot_token}
+                      className="text-[10px] font-mono font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 disabled:opacity-50 transition-colors"
+                    >
+                      {detectingChatId ? <RefreshCw className="w-2.5 h-2.5 animate-spin" /> : <Zap className="w-2.5 h-2.5" />}
+                      <span>{detectingChatId ? "Mencari..." : "Deteksi Otomatis"}</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={settings.telegram_chat_id}

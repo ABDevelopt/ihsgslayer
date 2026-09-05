@@ -53,14 +53,22 @@ class NotificationDispatcher:
         return cls._instance
 
     def _load_settings(self) -> AlertSettings:
+        loaded = AlertSettings()
         try:
             if os.path.exists(SETTINGS_FILE_PATH):
                 with open(SETTINGS_FILE_PATH, "r", encoding="utf-8") as f:
-                    return AlertSettings.model_validate(json.load(f))
+                    loaded = AlertSettings.model_validate(json.load(f))
         except Exception as e:
             logger.warning(f"Failed to load alert settings: {e}")
 
-        return AlertSettings()
+        # Fallback to environment variables if not configured in JSON
+        from src.core.config import settings as app_settings
+        if not loaded.telegram_bot_token and app_settings.TELEGRAM_BOT_TOKEN:
+            loaded.telegram_bot_token = app_settings.TELEGRAM_BOT_TOKEN
+        if not loaded.telegram_chat_id and app_settings.TELEGRAM_CHAT_ID:
+            loaded.telegram_chat_id = app_settings.TELEGRAM_CHAT_ID
+
+        return loaded
 
     def save_settings(self, new_settings: AlertSettings):
         self.settings = new_settings
@@ -114,7 +122,7 @@ class NotificationDispatcher:
             tg_bot = TelegramAlertBot(bot_token=cfg.telegram_bot_token, chat_id=cfg.telegram_chat_id)
             tg_ok = await tg_bot.send_message(
                 text=playbook["telegram_html"],
-                inline_button_url=f"http://localhost:3300/analysis/{symbol}",
+                inline_button_url=f"http://43.163.98.53/analysis/{symbol}",
                 button_text=f"[ANALISIS] #{symbol.replace('.JK', '')}"
             )
             results["telegram"] = tg_ok
@@ -199,7 +207,7 @@ class NotificationDispatcher:
             tg_bot = TelegramAlertBot(bot_token=cfg.telegram_bot_token, chat_id=cfg.telegram_chat_id)
             tg_ok = await tg_bot.send_message(
                 text=playbook["telegram_html"],
-                inline_button_url="http://localhost:3300/forward-test",
+                inline_button_url="http://43.163.98.53/forward-test",
                 button_text="[PORTFOLIO] Buka Forward Test Studio"
             )
             results["telegram"] = tg_ok

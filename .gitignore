@@ -35,10 +35,13 @@ top_buy_signals.json
 
 # Environment & Secrets
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+data/alert_settings.json
+alert_settings.json
 
 # Databases & Runtime State
 *.db
