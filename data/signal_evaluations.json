@@ -26903,12 +26903,12 @@
     "target_tp2": 2540.0,
     "stop_loss": 2030.0,
     "target_exit_time": "15:45 WIB (Penutupan Sore / ARA)",
-    "actual_exit_price": 2190.0,
+    "actual_exit_price": 2610.0,
     "actual_highest_price": 2610.0,
     "actual_lowest_price": 2110.0,
-    "realized_pnl_pct": 4.78,
+    "realized_pnl_pct": 24.88,
     "outcome_status": "WIN",
-    "win_reason": "Target Sore TP1 Tercapai di Rp 2,190 (+4.78%)",
+    "win_reason": "\ud83d\ude80 SUPER ARA: Terkunci di Batas ARA Rp 2,610 (+24.88%)",
     "eval_metadata": {
       "pre_ara_score": 93.0,
       "ara_probability": "SANGAT TINGGI (>85%)"
@@ -27503,12 +27503,12 @@
     "target_tp2": 1000.0,
     "stop_loss": 795.0,
     "target_exit_time": "15:45 WIB (Penutupan Sore / ARA)",
-    "actual_exit_price": 860.0,
+    "actual_exit_price": 940.0,
     "actual_highest_price": 960.0,
     "actual_lowest_price": 835.0,
-    "realized_pnl_pct": 4.88,
+    "realized_pnl_pct": 14.63,
     "outcome_status": "WIN",
-    "win_reason": "Target Sore TP1 Tercapai di Rp 860 (+4.88%)",
+    "win_reason": "\ud83d\udd25 Penutupan Sore Menguat di Rp 940 (+14.63%) Melebihi TP1",
     "eval_metadata": {
       "pre_ara_score": 80.0,
       "ara_probability": "TINGGI (>70%)"
@@ -27533,12 +27533,12 @@
     "target_tp2": 416.0,
     "stop_loss": 344.0,
     "target_exit_time": "15:45 WIB (Penutupan Sore / ARA)",
-    "actual_exit_price": 372.0,
+    "actual_exit_price": 416.0,
     "actual_highest_price": 438.0,
     "actual_lowest_price": 356.0,
-    "realized_pnl_pct": 5.08,
+    "realized_pnl_pct": 17.51,
     "outcome_status": "WIN",
-    "win_reason": "Target Sore TP1 Tercapai di Rp 372 (+5.08%)",
+    "win_reason": "\ud83d\ude80 SUPER ARA: Terkunci di Batas ARA Rp 416 (+17.51%)",
     "eval_metadata": {
       "pre_ara_score": 79.0,
       "ara_probability": "TINGGI (>70%)"
@@ -31408,13 +31408,13 @@
     "target_tp2": 127.0,
     "stop_loss": 94.0,
     "target_exit_time": "15:45 WIB (ARA Lock / Penutupan Sore)",
-    "actual_exit_price": 102.0,
+    "actual_exit_price": 103.0,
     "actual_exit_time": "15:45 WIB",
     "actual_highest_price": 111.0,
     "actual_lowest_price": 96.0,
-    "realized_pnl_pct": 5.15,
+    "realized_pnl_pct": 6.19,
     "outcome_status": "WIN",
-    "win_reason": "Target Momentum TP1 Tercapai di Rp 102 (+5.15%)",
+    "win_reason": "\ud83d\udd25 Penutupan Sore Menguat di Rp 103 (+6.19%) Melebihi TP1",
     "eval_metadata": {
       "volume_multiplier": 2.86,
       "pre_ara_score": 99.0,
@@ -31423,7 +31423,7 @@
       "day_gain_pct": 9.57
     },
     "created_at": "2026-09-04 09:10:00 WIB",
-    "evaluated_at": "2026-09-04 15:45 WIB"
+    "evaluated_at": "2026-09-04 15:45:00"
   },
   {
     "id": 984,

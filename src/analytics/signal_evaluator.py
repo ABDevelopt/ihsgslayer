@@ -205,46 +205,107 @@ class SignalEvaluatorEngine:
 
             is_today_live = (s_date == today_str and now.hour < 16)
 
-            if is_today_live:
-                # Intraday live evaluation while market is currently open
-                if day_low <= sl:
-                    record["actual_exit_price"] = sl
-                    record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
-                    record["outcome_status"] = "LOSS"
-                    record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%) di Sesi Pagi"
-                elif day_high >= tp1:
-                    actual_exit = min(tp1, day_high)
-                    record["actual_exit_price"] = actual_exit
-                    record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
-                    record["outcome_status"] = "WIN"
-                    record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%) di Sesi Pagi"
+            if strategy == "PRE_ARA":
+                # Pre-ARA Hunter Strategy: Specially designed to ride explosive morning momentum to ARA (TP2)
+                if is_today_live:
+                    if day_low <= sl:
+                        record["actual_exit_price"] = sl
+                        record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "LOSS"
+                        record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%) di Sesi Pagi"
+                    elif day_high >= tp2:
+                        actual_exit = min(tp2, day_high)
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"🚀 SUPER ARA: Target ARA Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+                    elif day_high >= tp1:
+                        actual_exit = min(tp1, day_high)
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"Target TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%) di Sesi Pagi"
+                    else:
+                        record["actual_exit_price"] = day_close
+                        record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "PENDING"
+                        record["win_reason"] = f"Posisi Pre-ARA Aktif (Harga: Rp {day_close:,.0f}). Menuju Target ARA Rp {tp2:,.0f}."
                 else:
-                    record["actual_exit_price"] = day_close
-                    record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
-                    record["outcome_status"] = "PENDING"
-                    record["win_reason"] = f"Posisi Aktif (Harga: Rp {day_close:,.0f}). Menunggu Target TP1 atau penutupan sore 15:45 WIB."
+                    # Completed past trading day
+                    if day_low <= sl:
+                        record["actual_exit_price"] = sl
+                        record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "LOSS"
+                        record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
+                    elif day_close >= tp2 or day_high >= tp2:
+                        # Achieved or locked at ARA limit
+                        actual_exit = day_close if day_close >= tp2 else tp2
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"🚀 SUPER ARA: Terkunci di Batas ARA Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+                    elif day_close > tp1:
+                        # Runner closed above TP1
+                        actual_exit = day_close
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"🔥 Penutupan Sore Menguat di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%) Melebihi TP1"
+                    elif day_high >= tp1:
+                        actual_exit = min(tp1, day_high)
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+                    else:
+                        actual_exit = day_close
+                        record["actual_exit_price"] = day_close
+                        record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
+                        sign = "+" if record["realized_pnl_pct"] > 0 else ""
+                        record["win_reason"] = f"Exit Penutupan Sore di Rp {day_close:,.0f} ({sign}{record['realized_pnl_pct']}%)"
+
             else:
-                # Market has closed for signal_date (or signal_date is in the past) -> Final outcome!
-                if day_low <= sl:
-                    record["actual_exit_price"] = sl
-                    record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
-                    record["outcome_status"] = "LOSS"
-                    record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
-                elif day_high >= tp1:
-                    actual_exit = min(tp1, day_high)
-                    record["actual_exit_price"] = actual_exit
-                    record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
-                    record["outcome_status"] = "WIN"
-                    record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+                # BPJS (Beli Pagi Jual Sore) Standard Intraday
+                if is_today_live:
+                    if day_low <= sl:
+                        record["actual_exit_price"] = sl
+                        record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "LOSS"
+                        record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%) di Sesi Pagi"
+                    elif day_high >= tp1:
+                        actual_exit = min(tp1, day_high)
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%) di Sesi Pagi"
+                    else:
+                        record["actual_exit_price"] = day_close
+                        record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "PENDING"
+                        record["win_reason"] = f"Posisi Aktif (Harga: Rp {day_close:,.0f}). Menunggu Target TP1 atau penutupan sore 15:45 WIB."
                 else:
-                    record["actual_exit_price"] = day_close
-                    record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
-                    record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
-                    sign = "+" if record["realized_pnl_pct"] > 0 else ""
-                    record["win_reason"] = f"Exit Penutupan Sore di Rp {day_close:,.0f} ({sign}{record['realized_pnl_pct']}%)"
+                    if day_low <= sl:
+                        record["actual_exit_price"] = sl
+                        record["realized_pnl_pct"] = round(((sl - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "LOSS"
+                        record["win_reason"] = f"Menyentuh Batas Cut Loss Rp {sl:,.0f} ({record['realized_pnl_pct']}%)"
+                    elif day_high >= tp1:
+                        actual_exit = min(tp1, day_high)
+                        record["actual_exit_price"] = actual_exit
+                        record["realized_pnl_pct"] = round(((actual_exit - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN"
+                        record["win_reason"] = f"Target Sore TP1 Tercapai di Rp {actual_exit:,.0f} (+{record['realized_pnl_pct']}%)"
+                    else:
+                        record["actual_exit_price"] = day_close
+                        record["realized_pnl_pct"] = round(((day_close - entry_p) / entry_p) * 100.0, 2)
+                        record["outcome_status"] = "WIN" if record["realized_pnl_pct"] > 0 else "LOSS"
+                        sign = "+" if record["realized_pnl_pct"] > 0 else ""
+                        record["win_reason"] = f"Exit Penutupan Sore di Rp {day_close:,.0f} ({sign}{record['realized_pnl_pct']}%)"
 
             record["actual_exit_time"] = "15:45 WIB"
             record["evaluated_at"] = f"{s_date} 15:45:00"
+
 
         # Strategy 2: BSJP (Beli Sore Jual Pagi -> Next trading day morning evaluation)
         elif strategy == "BSJP":
