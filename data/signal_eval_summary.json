@@ -1,0 +1,39 @@
+{
+  "total_signals": 667,
+  "evaluated_count": 666,
+  "win_count": 529,
+  "loss_count": 137,
+  "pending_count": 1,
+  "win_rate_pct": 79.4,
+  "avg_win_pct": 3.5,
+  "avg_loss_pct": -1.88,
+  "payoff_ratio": 1.86,
+  "expectancy_pct": 2.39,
+  "profit_factor": 7.19,
+  "kelly_criterion_pct": 68.3,
+  "half_kelly_pct": 34.1,
+  "z_score_stat": 15.17,
+  "p_value_text": "< 0.0001",
+  "is_statistically_significant": true,
+  "max_consecutive_wins": 15,
+  "max_consecutive_losses": 7,
+  "net_total_pnl_pct": 1595.01,
+  "bpjs_metrics": {
+    "total": 332,
+    "win_count": 288,
+    "win_rate": 86.7,
+    "avg_pnl": 2.39
+  },
+  "bsjp_metrics": {
+    "total": 168,
+    "win_count": 79,
+    "win_rate": 47.0,
+    "avg_pnl": 0.73
+  },
+  "pre_ara_metrics": {
+    "total": 166,
+    "win_count": 162,
+    "win_rate": 97.6,
+    "avg_pnl": 4.1
+  }
+}
