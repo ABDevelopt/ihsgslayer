@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import {
@@ -131,9 +131,21 @@ const CATEGORIES = [
       },
       {
         term: "RSI (Relative Strength Index)",
-        badge: "Kekuatan Momentum",
-        desc: "Indikator 0-100 yang mengukur seberapa kuat momentum naik/turun. RSI > 70 = OVERBOUGHT (terlalu cepat naik, rawan koreksi). RSI < 30 = OVERSOLD (terlalu jatuh, potensi rebound). RSI 50 = netral.",
-        example: "RSI = 25 (Oversold) → biasanya sinyal beli, harga sering rebound dari zona ini",
+        badge: "Kekuatan Momentum 0 - 100",
+        desc: "Indikator teknikal osilator 0–100 untuk mengukur kecepatan dan perubahan harga saham. Digunakan oleh trader dunia untuk mendeteksi dua kondisi ekstrem: titik jenuh beli (Overbought) dan titik jenuh jual (Oversold). Nilai 50 adalah titik ekuilibrium netral.",
+        example: "RSI 25 = sinyal oversold (potensi rebound). RSI 78 = sinyal overbought (rawan koreksi turun).",
+      },
+      {
+        term: "Overbought (Jenuh Beli — RSI > 70)",
+        badge: "Zona Kepanasan / Rawan Koreksi",
+        desc: "Kondisi saat harga saham sudah naik terlalu tinggi dan terlalu cepat dalam waktu singkat akibat aksi beli membabi-buta (FOMO). Di zona ini, tenaga pembeli mulai habis dan pembeli awal bersiap merealisasikan keuntungan (take profit).\n\n💡 ANALOGI: Seperti pelari sprint 100 meter yang kehabisan napas dan harus berhenti sejenak untuk istirahat/menarik napas.\n\n🎯 REKOMENDASI AKSI:\n• JANGAN beli baru / kejar harga di pucuk (risiko nyangkut sangat tinggi).\n• Amankan keuntungan bertahap (Take Profit 30%–50% lot).\n• Naikkan batas Trailing Stop ketat untuk mengunci profit yang sudah berjalan.",
+        example: "Saham melesat 5 hari berturut-turut hingga RSI menyentuh 78 → hari berikutnya rawan aksi profit taking",
+      },
+      {
+        term: "Oversold / Oversell (Jenuh Jual — RSI < 30)",
+        badge: "Zona Obral Murah / Potensi Rebound",
+        desc: "Kondisi saat harga saham sudah anjlok terlalu dalam dan dibanting terus-menerus karena kepanikan pasar (panic selling). Di zona ini, tekanan penjual sudah mengering (dry-up) dan valuasi saham dianggap diskon besar oleh institusi/smart money.\n\n💡 ANALOGI: Seperti bola karet yang dilempar kencang ke lantai semen — begitu menghantam titik terendah, bola pasti akan memantul naik (technical rebound).\n\n🎯 REKOMENDASI AKSI:\n• JANGAN ikut-ikutan panik cut loss di titik nadir saat RSI sudah < 25–30.\n• Pasang radar watchlist dan tunggu candle konfirmasi pembalikan (Hammer / Doji / Golden Cross).\n• Lakukan cicil beli bertahap (Buy on Weakness) dengan batasan risiko terukur di support.",
+        example: "Saham tertekan berita panik hingga RSI 22 di area support kuat → esoknya memantul rebound +6%",
       },
       {
         term: "MACD",

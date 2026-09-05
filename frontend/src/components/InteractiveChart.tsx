@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo } from "react";
 import {
@@ -53,7 +53,8 @@ const INDICATOR_HINTS = [
   { label: "Bollinger Band", color: "text-purple-400",  hint: "Terowongan volatilitas. Harga di lower band = potensi beli. Upper band = potensi jual." },
   { label: "MA20 (cyan)",  color: "text-cyan-400",   hint: "Rata-rata harga 20 hari. Di atas MA20 = tren jangka pendek naik." },
   { label: "MA50 (amber)", color: "text-amber-400",  hint: "Rata-rata harga 50 hari. Di atas MA50 = tren jangka menengah naik (bullish)." },
-  { label: "RSI",  color: "text-indigo-400",  hint: "Kekuatan momentum 0-100. Di bawah 30 = Oversold (potensi beli). Di atas 70 = Overbought (potensi jual)." },
+  { label: "Overbought (>70)", color: "text-rose-400", hint: "Jenuh Beli — Pembeli kepanasan/FOMO. Rekomendasi: Amankan profit (Take Profit bertahap). HINDARI kejar beli di pucuk!" },
+  { label: "Oversold (<30)", color: "text-emerald-400", hint: "Jenuh Jual (Oversell) — Penjual panik. Rekomendasi: JANGAN cut loss di dasar jurang. Siap-siap Buy on Weakness saat memantul." },
 ];
 
 export default function InteractiveChart({
@@ -152,10 +153,33 @@ export default function InteractiveChart({
   const support1 = pivotLevels?.support_1   || Math.round(2 * pivot - high);
   const support2 = pivotLevels?.support_2   || Math.round(pivot - (high - low));
 
-  // RSI zone info
-  const rsiStatus = latestRSI >= 70 ? { label: "OVERBOUGHT", color: "text-rose-400", bg: "bg-rose-500/20 border-rose-500/30", advice: "Terlalu cepat naik — potensi koreksi jangka pendek." }
-    : latestRSI <= 30 ? { label: "OVERSOLD",   color: "text-emerald-400", bg: "bg-emerald-500/20 border-emerald-500/30", advice: "Terlalu tertekan — potensi rebound naik." }
-    : { label: "NETRAL", color: "text-slate-400", bg: "bg-slate-500/20 border-slate-500/30", advice: "Momentum belum ekstrem di kedua arah." };
+  // RSI zone info & actionable recommendations
+  const rsiStatus = latestRSI >= 70
+    ? {
+        label: "OVERBOUGHT (Jenuh Beli)",
+        badge: "🔴 RAWAN KOREKSI PUCUK",
+        color: "text-rose-400",
+        bg: "bg-rose-500/15 border-rose-500/30 text-rose-300",
+        actionTitle: "REKOMENDASI AKSI OVERBOUGHT (> 70):",
+        actionText: "Harga saham naik terlalu cepat (FOMO). HINDARI beli baru di pucuk! Amankan keuntungan bertahap (Take Profit 30%–50% lot) atau pasang Trailing Stop ketat untuk mengunci profit berjalan."
+      }
+    : latestRSI <= 30
+    ? {
+        label: "OVERSOLD / OVERSELL (Jenuh Jual)",
+        badge: "🟢 POTENSI MEMANTUL (REBOUND)",
+        color: "text-emerald-400",
+        bg: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
+        actionTitle: "REKOMENDASI AKSI OVERSOLD (< 30):",
+        actionText: "Tekanan jual sudah kering (panic selling mereda). JANGAN ikut panik cut loss di dasar jurang! Siapkan watchlist untuk cicil beli (Buy on Weakness) begitu muncul candle pantulan."
+      }
+    : {
+        label: "NETRAL (Momentum Sehat)",
+        badge: "⚪ MOMENTUM NORMAL",
+        color: "text-slate-300",
+        bg: "bg-slate-500/15 border-slate-500/30 text-slate-300",
+        actionTitle: "REKOMENDASI AKSI NETRAL (30 - 70):",
+        actionText: "Momentum harga berada dalam batas wajar. Ikuti arah tren utama (Follow Trend) dengan konfirmasi MA20/MA50 dan batas Support/Resistance."
+      };
 
   return (
     <div className="space-y-4">
@@ -348,17 +372,30 @@ export default function InteractiveChart({
         </div>
       </div>
 
-      {/* ── RSI Sub-panel ─────────────────────────────────────── */}
+      {/* ── RSI Sub-panel with Action Recommendations ────────────── */}
       <div className="p-5 rounded-2xl pg-surface border pg-divider shadow-lg space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-indigo-400" />
-            <h4 className="font-bold text-xs font-mono pg-text">RSI-14 — Kekuatan Momentum</h4>
+            <h4 className="font-bold text-xs font-mono pg-text">RSI-14 — Kekuatan Momentum & Kejenuhan Pasar</h4>
             <span className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold border ${rsiStatus.bg}`}>
-              {rsiStatus.label}
+              {rsiStatus.badge}
             </span>
           </div>
-          <div className="text-[11px] pg-text-muted font-mono">{rsiStatus.advice}</div>
+          <div className="text-[11px] font-mono flex items-center gap-2">
+            <span className="pg-text-muted">RSI Saat Ini:</span>
+            <span className={`font-bold ${rsiStatus.color}`}>{latestRSI.toFixed(1)}</span>
+          </div>
+        </div>
+
+        {/* Action Recommendation Banner */}
+        <div className={`p-3 rounded-xl border ${rsiStatus.bg} space-y-1 font-mono`}>
+          <div className={`text-[10px] font-bold uppercase tracking-wider ${rsiStatus.color}`}>
+            🎯 {rsiStatus.actionTitle}
+          </div>
+          <p className="text-[11px] leading-relaxed pg-text opacity-90 font-sans">
+            {rsiStatus.actionText}
+          </p>
         </div>
 
         {/* RSI Chart */}
@@ -387,19 +424,16 @@ export default function InteractiveChart({
           </ResponsiveContainer>
         </div>
 
-        {/* RSI current reading */}
-        <div className="flex items-center gap-4 text-[11px] font-mono">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-indigo-400" />
-            <span className="pg-text-muted">RSI Saat Ini:</span>
-            <span className={`font-bold ${rsiStatus.color}`}>{latestRSI.toFixed(1)}</span>
+        {/* RSI Legend Footer */}
+        <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] font-mono pg-text-faint pt-1 border-t pg-divider">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-rose-400 inline-block" /> &gt;70 Overbought (Jenuh Beli)</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-emerald-400 inline-block" /> &lt;30 Oversold (Jenuh Jual)</span>
           </div>
-          <div className="flex items-center gap-2 text-[10px] pg-text-faint">
-            <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-rose-400 inline-block" /> &gt;70 Overbought</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-emerald-400 inline-block" /> &lt;30 Oversold</span>
-          </div>
+          <span className="italic">Gunakan konfirmasi Support/Resistance sebelum eksekusi order</span>
         </div>
       </div>
+
     </div>
   );
 }
