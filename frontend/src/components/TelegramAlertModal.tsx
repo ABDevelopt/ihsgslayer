@@ -162,6 +162,41 @@ export default function TelegramAlertModal({ isOpen, onClose }: TelegramAlertMod
     }
   };
 
+  const [testingRealSignal, setTestingRealSignal] = useState<boolean>(false);
+
+  const handleTestRealSignal = async () => {
+    if (!settings.telegram_chat_id) {
+      setFeedback({ type: "error", message: "Pastikan Chat ID sudah terisi sebelum menguji sinyal." });
+      return;
+    }
+    setTestingRealSignal(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(`${API_BASE}/alerts/test-signal-dispatch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ strategy: "AUTO", force: true }),
+      });
+      const data = await res.json();
+      if (res.ok && data.status === "SUCCESS") {
+        const sig = data.signal_dispatched;
+        setFeedback({
+          type: "success",
+          message: `[SINYAL TERKIRIM] Sinyal ${sig.strategy} #${sig.symbol.replace(".JK", "")} (Skor: ${sig.score}) berhasil dikirimkan ke Telegram!`,
+        });
+      } else {
+        throw new Error(data.detail || data.message || "Gagal mengirim sinyal riil.");
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: "error",
+        message: `[ERROR] ${err.message || "Gagal mengirim notifikasi sinyal ke Telegram."}`,
+      });
+    } finally {
+      setTestingRealSignal(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-2xl bg-cardBg border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -370,14 +405,26 @@ export default function TelegramAlertModal({ isOpen, onClose }: TelegramAlertMod
 
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/70 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <button
-            onClick={handleTestNotification}
-            disabled={testing || loading || !settings.telegram_bot_token || !settings.telegram_chat_id}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 font-mono font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
-          >
-            {testing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            <span>{testing ? "Mengirim..." : "Kirim Pesan Uji Coba"}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={handleTestNotification}
+              disabled={testing || loading || !settings.telegram_chat_id}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 font-mono font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 transition-all"
+            >
+              {testing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              <span>{testing ? "Mengirim..." : "Uji Bot"}</span>
+            </button>
+
+            <button
+              onClick={handleTestRealSignal}
+              disabled={testingRealSignal || loading || !settings.telegram_chat_id}
+              className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-mono font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 transition-all"
+              title="Kirim notifikasi playbook sinyal pasar riil saat ini ke Telegram"
+            >
+              {testingRealSignal ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              <span>{testingRealSignal ? "Memindai Sinyal..." : "⚡ Uji Sinyal Keluar"}</span>
+            </button>
+          </div>
 
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
             <button

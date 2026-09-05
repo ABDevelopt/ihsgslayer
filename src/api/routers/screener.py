@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import asyncio
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 import pandas as pd
@@ -252,6 +253,28 @@ async def get_bsjp_candidates(min_score: float = 60.0):
             eval_metadata={"bsjp_score": c.bsjp_score, "gap_up_probability": c.gap_up_probability}
         )
 
+    # Auto-dispatch tactical alert to Telegram if enabled
+    try:
+        from src.alerts.dispatcher import NotificationDispatcher
+        dispatcher = NotificationDispatcher.get_instance()
+        if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_bsjp_alerts:
+            for c in candidates:
+                if c.bsjp_score >= dispatcher.settings.min_score_filter:
+                    asyncio.create_task(dispatcher.dispatch_buy_signal(
+                        symbol=c.symbol,
+                        name=c.name,
+                        sector=c.sector,
+                        strategy="BSJP",
+                        entry_price=float(c.close_price),
+                        target_tp1=float(c.target_sell_morning_min),
+                        target_tp2=float(c.target_sell_morning_max),
+                        stop_loss=float(c.stop_loss_morning),
+                        score=float(c.bsjp_score),
+                        selling_time_window="PAGI H+1: 09:05 - 09:20 WIB (Opening Spike)"
+                    ))
+    except Exception as e:
+        print(f"[BSJP Alert] Dispatch error: {e}")
+
     from src.analytics.friday_shield import FridayShieldEngine
     friday_shield = FridayShieldEngine.get_friday_risk_profile()
 
@@ -324,6 +347,31 @@ async def get_bpjs_candidates(min_score: float = 60.0):
             eval_metadata={"bpjs_score": c.bpjs_score, "volume_multiplier": c.volume_multiplier}
         )
 
+    # Auto-dispatch tactical alert to Telegram if enabled
+    try:
+        from src.alerts.dispatcher import NotificationDispatcher
+        dispatcher = NotificationDispatcher.get_instance()
+        if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_bpjs_alerts:
+            for c in candidates:
+                if c.bpjs_score >= dispatcher.settings.min_score_filter:
+                    tp1_v = round(c.current_price * 1.035, 0)
+                    tp2_v = round(c.current_price * 1.070, 0)
+                    sl_v = round(c.current_price * 0.975, 0)
+                    asyncio.create_task(dispatcher.dispatch_buy_signal(
+                        symbol=c.symbol,
+                        name=c.name,
+                        sector=c.sector,
+                        strategy="BPJS",
+                        entry_price=float(c.current_price),
+                        target_tp1=float(tp1_v),
+                        target_tp2=float(tp2_v),
+                        stop_loss=float(sl_v),
+                        score=float(c.bpjs_score),
+                        selling_time_window="SORE INI: 15:40 - 15:50 WIB (Zero Overnight)"
+                    ))
+    except Exception as e:
+        print(f"[BPJS Alert] Dispatch error: {e}")
+
     return {
         "session": "MORNING_BREAKOUT_09_15_WIB",
         "timing_gate": BPJSEngine.get_bpjs_timing_gate(),
@@ -388,6 +436,28 @@ async def get_pre_ara_candidates(min_score: float = 65.0):
             signal_date=now_date_str,
             eval_metadata={"pre_ara_score": c.pre_ara_score, "ara_probability": c.ara_probability}
         )
+
+    # Auto-dispatch tactical alert to Telegram if enabled
+    try:
+        from src.alerts.dispatcher import NotificationDispatcher
+        dispatcher = NotificationDispatcher.get_instance()
+        if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_pre_ara_alerts:
+            for c in candidates:
+                if c.pre_ara_score >= dispatcher.settings.min_score_filter:
+                    asyncio.create_task(dispatcher.dispatch_buy_signal(
+                        symbol=c.symbol,
+                        name=c.name,
+                        sector=c.sector,
+                        strategy="PRE_ARA",
+                        entry_price=float(c.current_price),
+                        target_tp1=float(c.predicted_tp1_price),
+                        target_tp2=float(c.ara_ceiling_price),
+                        stop_loss=float(c.predicted_stop_loss_price),
+                        score=float(c.pre_ara_score),
+                        selling_time_window="TP1: 09:30 - 10:15 WIB | Plafon ARA: 11:00 - 11:30 / 15:45 WIB"
+                    ))
+    except Exception as e:
+        print(f"[Pre-ARA Alert] Dispatch error: {e}")
 
     return {
         "strategy": "PRE_ARA_MOMENTUM_HUNTER",
@@ -696,6 +766,27 @@ async def get_institutional_buy_signals(min_score: float = 60.0):
                     "pattern": pat_text
                 }
             )
+
+            # Auto-dispatch tactical alert to Telegram if enabled
+            try:
+                from src.alerts.dispatcher import NotificationDispatcher
+                dispatcher = NotificationDispatcher.get_instance()
+                if dispatcher.settings.telegram_enabled and dispatcher.settings.enable_confluence_alerts:
+                    if score >= dispatcher.settings.min_score_filter:
+                        asyncio.create_task(dispatcher.dispatch_buy_signal(
+                            symbol=sym,
+                            name=sig_dict["name"],
+                            sector=sig_dict["sector"],
+                            strategy="BUY_LAYAK",
+                            entry_price=float(curr_p),
+                            target_tp1=float(sig_dict["tp1_price"]),
+                            target_tp2=float(sig_dict["tp2_price"]),
+                            stop_loss=float(sig_dict["stop_loss_price"]),
+                            score=float(score),
+                            selling_time_window=sig_dict.get("selling_time_window", "Swing 3 - 15 Hari Bursa")
+                        ))
+            except Exception as e:
+                print(f"[Confluence Alert] Dispatch error: {e}")
 
     # Sort by AI Score
     signals = sorted(signals, key=lambda x: x['ai_score'], reverse=True)

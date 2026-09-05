@@ -199,3 +199,174 @@ async def preview_tactical_playbook(
         score=score
     )
     return {"status": "SUCCESS", "playbook": playbook}
+
+
+class TestSignalDispatchRequest(BaseModel):
+    strategy: Optional[str] = "AUTO"  # "AUTO", "BPJS", "PRE_ARA", "BSJP", "BUY_LAYAK"
+    symbol: Optional[str] = None
+    force: bool = True
+
+
+@router.post("/test-signal-dispatch")
+async def trigger_signal_dispatch(req: TestSignalDispatchRequest = Body(default_factory=TestSignalDispatchRequest)):
+    """
+    Kirim uji coba notifikasi Telegram saat sinyal trading kuantitatif terdeteksi / keluar.
+    Mengambil kandidat sinyal riil tertinggi dari algoritma pasar aktif.
+    """
+    from src.data.universe import FULL_IDX_UNIVERSE
+    from src.api.routers.screener import (
+        get_bpjs_candidates,
+        get_pre_ara_candidates,
+        get_bsjp_candidates,
+        get_institutional_buy_signals,
+        _build_current_universe_metrics
+    )
+
+    strat = (req.strategy or "AUTO").upper()
+    target_candidate = None
+    chosen_strat = strat
+
+    # 1. If strategy is BPJS or AUTO
+    if strat in ["BPJS", "AUTO"]:
+        try:
+            res = await get_bpjs_candidates(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "BPJS"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "BPJS"
+        except Exception:
+            pass
+
+    # 2. If strategy is PRE_ARA or AUTO (and no candidate yet)
+    if not target_candidate and strat in ["PRE_ARA", "AUTO"]:
+        try:
+            res = await get_pre_ara_candidates(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "PRE_ARA"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "PRE_ARA"
+        except Exception:
+            pass
+
+    # 3. If strategy is BSJP or AUTO (and no candidate yet)
+    if not target_candidate and strat in ["BSJP", "AUTO"]:
+        try:
+            res = await get_bsjp_candidates(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "BSJP"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "BSJP"
+        except Exception:
+            pass
+
+    # 4. If strategy is BUY_LAYAK / CONFLUENCE or AUTO (and no candidate yet)
+    if not target_candidate and strat in ["BUY_LAYAK", "CONFLUENCE", "AUTO"]:
+        try:
+            res = await get_institutional_buy_signals(min_score=50.0)
+            cands = res.get("candidates", [])
+            if req.symbol:
+                match = next((c for c in cands if req.symbol.upper() in c["symbol"]), None)
+                if match:
+                    target_candidate = match
+                    chosen_strat = "BUY_LAYAK"
+            elif cands:
+                target_candidate = cands[0]
+                chosen_strat = "BUY_LAYAK"
+        except Exception:
+            pass
+
+    # If still no candidate, build from live universe metric (e.g. for requested symbol or top stock)
+    if not target_candidate:
+        metrics = _build_current_universe_metrics()
+        sym = req.symbol.upper() if req.symbol else "BUMI.JK"
+        if not sym.endswith(".JK"):
+            sym += ".JK"
+        stock_m = next((m for m in metrics if m["symbol"] == sym), metrics[0] if metrics else None)
+        p = float(stock_m["price"] if stock_m else 500.0)
+        chosen_strat = "PRE_ARA" if chosen_strat == "AUTO" else chosen_strat
+        target_candidate = {
+            "symbol": sym,
+            "name": stock_m.get("name", sym) if stock_m else sym,
+            "sector": stock_m.get("sector", "General") if stock_m else "General",
+            "current_price": p,
+            "price": p,
+            "ai_score": stock_m.get("ai_score", 85.0) if stock_m else 85.0,
+            "predicted_tp1_price": round(p * 1.06, 0),
+            "ara_ceiling_price": round(p * 1.15, 0),
+            "predicted_stop_loss_price": round(p * 0.95, 0),
+        }
+
+    # Extract required fields safely
+    symbol = target_candidate.get("symbol", "BBCA.JK")
+    name = target_candidate.get("name", symbol)
+    sector = target_candidate.get("sector", "General")
+    entry_p = float(target_candidate.get("current_price", target_candidate.get("price", target_candidate.get("close_price", 1000.0))))
+    score = float(target_candidate.get("ai_score", target_candidate.get("bpjs_score", target_candidate.get("pre_ara_score", target_candidate.get("bsjp_score", 75.0)))))
+
+    if chosen_strat == "BPJS":
+        tp1 = float(target_candidate.get("target_tp1_price", round(entry_p * 1.035, 0)))
+        tp2 = float(target_candidate.get("target_tp2_price", round(entry_p * 1.070, 0)))
+        sl = float(target_candidate.get("stop_loss_price", round(entry_p * 0.975, 0)))
+        selling_window = "SORE INI: 15:40 - 15:50 WIB (Zero Overnight)"
+    elif chosen_strat == "BSJP":
+        tp1 = float(target_candidate.get("target_sell_morning_min", round(entry_p * 1.03, 0)))
+        tp2 = float(target_candidate.get("target_sell_morning_max", round(entry_p * 1.06, 0)))
+        sl = float(target_candidate.get("stop_loss_morning", round(entry_p * 0.97, 0)))
+        selling_window = "PAGI H+1: 09:05 - 09:20 WIB (Opening Spike)"
+    elif chosen_strat == "PRE_ARA":
+        tp1 = float(target_candidate.get("predicted_tp1_price", round(entry_p * 1.08, 0)))
+        tp2 = float(target_candidate.get("ara_ceiling_price", round(entry_p * 1.20, 0)))
+        sl = float(target_candidate.get("predicted_stop_loss_price", round(entry_p * 0.95, 0)))
+        selling_window = "TP1: 09:30 - 10:15 WIB | Plafon ARA: 11:00 - 11:30 / 15:45 WIB"
+    else:
+        tp1 = float(target_candidate.get("tp1_price", round(entry_p * 1.06, 0)))
+        tp2 = float(target_candidate.get("tp2_price", round(entry_p * 1.12, 0)))
+        sl = float(target_candidate.get("stop_loss_price", round(entry_p * 0.95, 0)))
+        selling_window = "Swing 3 - 15 Hari Bursa (Exit saat mendekati level TP1/TP2)"
+
+    dispatch_res = await dispatcher.dispatch_buy_signal(
+        symbol=symbol,
+        name=name,
+        sector=sector,
+        strategy=chosen_strat,
+        entry_price=entry_p,
+        target_tp1=tp1,
+        target_tp2=tp2,
+        stop_loss=sl,
+        score=score,
+        selling_time_window=selling_window,
+        force=req.force
+    )
+
+    return {
+        "status": "SUCCESS",
+        "message": f"Notifikasi sinyal {chosen_strat} untuk #{symbol.replace('.JK', '')} berhasil dikirim ke Telegram!",
+        "signal_dispatched": {
+            "symbol": symbol,
+            "name": name,
+            "sector": sector,
+            "strategy": chosen_strat,
+            "entry_price": entry_p,
+            "target_tp1": tp1,
+            "target_tp2": tp2,
+            "stop_loss": sl,
+            "score": score,
+            "selling_time_window": selling_window
+        },
+        "dispatch_result": dispatch_res
+    }

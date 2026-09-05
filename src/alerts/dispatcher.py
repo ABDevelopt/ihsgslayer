@@ -156,21 +156,6 @@ class NotificationDispatcher:
         except Exception as e:
             logger.warning(f"Failed to emit WS signal event: {e}")
 
-        # Broadcast via real-time WebSocket
-        try:
-            from src.api.routers.stream import emit_market_event_sync
-            emit_market_event_sync("TRADE_EXECUTED", {
-                "symbol": symbol,
-                "strategy": strategy,
-                "action_type": action_type,
-                "entry_price": entry_price,
-                "exit_price": exit_price,
-                "realized_pnl_pct": realized_pnl_pct,
-                "realized_pnl_amt": realized_pnl_amt
-            })
-        except Exception as e:
-            logger.warning(f"Failed to emit WS trade execution event: {e}")
-
         return {"status": "DISPATCHED", "results": results, "playbook": playbook}
 
     async def dispatch_sell_execution(

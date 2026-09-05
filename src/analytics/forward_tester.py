@@ -286,6 +286,33 @@ class ForwardTestEngine:
             level="TRADE",
             symbol=symbol
         )
+
+        # Trigger Buy Alert Dispatcher
+        try:
+            from src.alerts.dispatcher import NotificationDispatcher
+            dispatcher = NotificationDispatcher.get_instance()
+            if dispatcher.settings.enable_execution_alerts:
+                import asyncio
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(dispatcher.dispatch_buy_signal(
+                        symbol=symbol,
+                        name=position.name,
+                        sector=position.sector,
+                        strategy=position.strategy,
+                        entry_price=position.entry_price,
+                        target_tp1=position.target_tp1,
+                        target_tp2=position.target_tp2,
+                        stop_loss=position.stop_loss,
+                        score=80.0,
+                        selling_time_window=position.selling_time_window or "",
+                        force=True
+                    ))
+                except RuntimeError:
+                    pass
+        except Exception:
+            pass
+
         self._recalculate_metrics()
         return position
 
