@@ -413,12 +413,14 @@ def get_emiten_win_rate_stats(symbol: str) -> Optional[Dict[str, Any]]:
         row = cursor.fetchone()
         if row and row["evaluated_count"] and row["evaluated_count"] > 0:
             return {
+                "total_signals": row["total_signals"],
                 "evaluated_count": row["evaluated_count"],
                 "win_count": row["win_count"],
                 "win_rate_pct": row["win_rate_pct"],
                 "avg_pnl_pct": row["avg_pnl_pct"]
             }
     return None
+
 
 
 def get_distinct_audit_dates() -> List[str]:

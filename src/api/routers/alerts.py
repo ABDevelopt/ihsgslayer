@@ -425,22 +425,22 @@ async def trigger_signal_dispatch(req: TestSignalDispatchRequest = Body(default_
         tp1 = float(target_candidate.get("target_tp1_price", round(entry_p * 1.035, 0)))
         tp2 = float(target_candidate.get("target_tp2_price", round(entry_p * 1.070, 0)))
         sl = float(target_candidate.get("stop_loss_price", round(entry_p * 0.975, 0)))
-        selling_window = "SORE INI: 15:40 - 15:50 WIB (Zero Overnight)"
+        selling_window = "15:40 - 15:50 WIB (Sore Hari - Wajib Zero Overnight)"
     elif chosen_strat == "BSJP":
         tp1 = float(target_candidate.get("target_sell_morning_min", round(entry_p * 1.03, 0)))
         tp2 = float(target_candidate.get("target_sell_morning_max", round(entry_p * 1.06, 0)))
         sl = float(target_candidate.get("stop_loss_morning", round(entry_p * 0.97, 0)))
-        selling_window = "PAGI H+1: 09:05 - 09:20 WIB (Opening Spike)"
+        selling_window = "09:05 - 09:20 WIB (Pagi H+1 - Opening Spike)"
     elif chosen_strat == "PRE_ARA":
         tp1 = float(target_candidate.get("predicted_tp1_price", round(entry_p * 1.08, 0)))
         tp2 = float(target_candidate.get("ara_ceiling_price", round(entry_p * 1.20, 0)))
         sl = float(target_candidate.get("predicted_stop_loss_price", round(entry_p * 0.95, 0)))
-        selling_window = "TP1: 09:30 - 10:15 WIB | Plafon ARA: 11:00 - 11:30 / 15:45 WIB"
+        selling_window = "TP1 09:30 - 10:15 WIB | Plafon ARA 11:00 - 11:30 / 15:45 WIB"
     else:
         tp1 = float(target_candidate.get("tp1_price", round(entry_p * 1.06, 0)))
         tp2 = float(target_candidate.get("tp2_price", round(entry_p * 1.12, 0)))
         sl = float(target_candidate.get("stop_loss_price", round(entry_p * 0.95, 0)))
-        selling_window = "Swing 3 - 15 Hari Bursa (Exit saat mendekati level TP1/TP2)"
+        selling_window = "Swing 3 - 15 Hari Bursa (Dekat level TP1/TP2)"
 
     dispatch_res = await dispatcher.dispatch_buy_signal(
         symbol=symbol,
