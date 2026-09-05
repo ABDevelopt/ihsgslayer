@@ -366,7 +366,7 @@ def get_all_evaluation_records(
     return results
 
 
-def get_stock_evaluations(symbol: str, limit: int = 50) -> List[Dict[str, Any]]:
+def get_stock_evaluations(symbol: str, limit: int = 500) -> List[Dict[str, Any]]:
     """
     Get evaluations for a single ticker symbol.
     """

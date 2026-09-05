@@ -245,16 +245,20 @@ async def export_audit_json():
     )
 
 @router.get("/stock/{symbol}")
-async def get_stock_evaluation_summary(symbol: str):
+async def get_stock_evaluation_summary(
+    symbol: str,
+    limit: int = Query(default=500, ge=1, le=1000, description="Max historical evaluation records to return")
+):
     """
     Get audit performance summary and historical signal track record for an individual stock.
     """
     import numpy as np
     clean_sym = symbol.upper().replace(".JK", "")
     full_sym = f"{clean_sym}.JK"
+    clean_limit = limit if isinstance(limit, int) else 500
 
     # Ultra-fast indexed query from SQLite WAL
-    stock_records = audit_db.get_stock_evaluations(clean_sym, limit=100)
+    stock_records = audit_db.get_stock_evaluations(clean_sym, limit=clean_limit)
     if not stock_records:
         records = SignalEvaluatorEngine.load_records()
         stock_records = [

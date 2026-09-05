@@ -125,9 +125,9 @@ export const api = {
     return fetchJson("/evaluation/dates");
   },
 
-  async getStockEvaluation(symbol: string): Promise<any> {
+  async getStockEvaluation(symbol: string, limit = 500): Promise<any> {
     const clean = symbol.replace(".JK", "");
-    return fetchJson(`/evaluation/stock/${clean}`);
+    return fetchJson(`/evaluation/stock/${clean}?limit=${limit}`);
   },
 
   async evaluateNow(): Promise<any> {
