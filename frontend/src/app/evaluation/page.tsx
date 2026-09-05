@@ -178,7 +178,7 @@ export default function EvaluationPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Export CSV Button */}
           <a
-            href="http://127.0.0.1:8000/api/v1/evaluation/export/csv"
+            href="/api/v1/evaluation/export/csv"
             download="ihsg_slayer_audit_dataset.csv"
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center space-x-1.5 border border-slate-700 transition-all shadow-md"
           >
@@ -188,7 +188,7 @@ export default function EvaluationPage() {
 
           {/* Export JSON Button */}
           <a
-            href="http://127.0.0.1:8000/api/v1/evaluation/export/json"
+            href="/api/v1/evaluation/export/json"
             download="ihsg_slayer_audit_dataset.json"
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center space-x-1.5 border border-slate-700 transition-all shadow-md"
           >
