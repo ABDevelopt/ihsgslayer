@@ -15,7 +15,7 @@ dispatcher = NotificationDispatcher.get_instance()
 
 
 class TestTelegramRequest(BaseModel):
-    bot_token: str
+    bot_token: Optional[str] = None
     chat_id: str
 
 
@@ -130,7 +130,8 @@ async def test_telegram_notification(req: TestTelegramRequest):
         f"{sample['telegram_html']}"
     )
 
-    bot = TelegramAlertBot(bot_token=req.bot_token, chat_id=req.chat_id)
+    token = req.bot_token or dispatcher.settings.telegram_bot_token
+    bot = TelegramAlertBot(bot_token=token, chat_id=req.chat_id)
     success = await bot.send_message(
         text=test_html,
         inline_button_url="http://43.163.98.53/analysis/JECC.JK",
