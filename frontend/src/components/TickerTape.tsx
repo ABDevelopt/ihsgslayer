@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface TickerItem {
   symbol: string;
@@ -42,12 +43,9 @@ export default function TickerTape() {
 
     const fetchTickerData = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/stocks/ticker-tape");
-        if (res.ok) {
-          const data = await res.json();
-          if (data && Array.isArray(data.items) && data.items.length > 0 && isMounted) {
-            setItems(data.items);
-          }
+        const data = await api.getTickerTape();
+        if (data && Array.isArray(data.items) && data.items.length > 0 && isMounted) {
+          setItems(data.items);
         }
       } catch (e) {
         // Fallback gracefully to default real snapshot

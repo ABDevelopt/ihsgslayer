@@ -13,6 +13,7 @@ import {
   Activity,
 } from "lucide-react";
 import { formatPercent } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 export default function IHSGForecastWidget() {
   const [forecast, setForecast] = useState<any>(null);
@@ -21,8 +22,7 @@ export default function IHSGForecastWidget() {
   const fetchForecast = async (force = false) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/screener/ihsg-forecast?force_refresh=${force}`);
-      const data = await res.json();
+      const data = await api.getIHSGForecast(force);
       setForecast(data);
     } catch (err) {
       console.error("Failed to fetch IHSG forecast:", err);

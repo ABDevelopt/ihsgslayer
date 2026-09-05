@@ -16,9 +16,10 @@ import {
   Zap,
   Activity
 } from "lucide-react";
-
-const API_BASE = "http://127.0.0.1:8000/api/v1";
 import StrategyHubNav from "@/components/StrategyHubNav";
+import { getApiBase } from "@/lib/api";
+
+const API_BASE = getApiBase();
 
 interface MacroDriver {
   symbol: string;

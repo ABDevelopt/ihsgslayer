@@ -23,11 +23,12 @@ import { ShariaBadge } from "@/components/ShariaBadge";
 
 import { useState, useCallback } from "react";
 import StrategyHubNav from "@/components/StrategyHubNav";
+import { getApiBase } from "@/lib/api";
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell
 } from "recharts";
-const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const API = getApiBase();
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 const PATTERN_OPTIONS = ["AREA_DEMAND","THROWBACK_RETEST","LIQUIDITY_SWEEP","EARLY_BREAKOUT"];
 

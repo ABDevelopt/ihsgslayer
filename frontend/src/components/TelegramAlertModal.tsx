@@ -20,7 +20,8 @@ interface AlertSettingsState {
   enable_execution_alerts: boolean;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+import { getApiBase } from "@/lib/api";
+const API_BASE = getApiBase();
 
 export default function TelegramAlertModal({ isOpen, onClose }: TelegramAlertModalProps) {
   const [settings, setSettings] = useState<AlertSettingsState>({

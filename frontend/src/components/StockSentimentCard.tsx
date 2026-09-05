@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Globe, Newspaper, ShieldAlert, ArrowUpRight, ArrowDownRight, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface StockSentimentCardProps {
   symbol: string;
@@ -17,11 +18,7 @@ export const StockSentimentCard: React.FC<StockSentimentCardProps> = ({ symbol }
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    fetch(`http://127.0.0.1:8000/api/v1/sentiment/stock/${cleanSym}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Gagal memuat data sentimen");
-        return res.json();
-      })
+    api.getStockSentiment(cleanSym)
       .then((json) => {
         if (isMounted) {
           setData(json);

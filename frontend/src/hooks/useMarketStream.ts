@@ -8,7 +8,17 @@ export interface MarketPulseEvent {
   data?: any;
 }
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/ws/market-pulse";
+function getWsUrl(): string {
+  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    if (window.location.port === "3000") {
+      return `ws://${window.location.hostname}:8000/ws/market-pulse`;
+    }
+    return `${protocol}//${window.location.host}/ws/market-pulse`;
+  }
+  return "ws://127.0.0.1:8000/ws/market-pulse";
+}
 
 export function useMarketStream() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -27,7 +37,7 @@ export function useMarketStream() {
         return;
       }
 
-      const socket = new WebSocket(WS_URL);
+      const socket = new WebSocket(getWsUrl());
       wsRef.current = socket;
 
       socket.onopen = () => {

@@ -15,8 +15,9 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import { getApiBase } from "@/lib/api";
 
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const API_BASE = getApiBase();
 
 interface IntradayPhase {
   phase_key: string;

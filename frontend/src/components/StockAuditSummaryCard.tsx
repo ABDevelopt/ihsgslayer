@@ -52,63 +52,14 @@ export default function StockAuditSummaryCard({ symbol }: StockAuditSummaryCardP
     return () => { isMounted = false; };
   }, [cleanSym]);
 
-  if (loading) {
-    return (
-      <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-3 animate-pulse">
-        <div className="h-5 w-48 bg-slate-800 rounded" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-16 bg-slate-900 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!data || data.total_signals === 0) {
-    return (
-      <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-400" />
-            <span>Rangkuman Rekam Jejak &amp; Win Rate Sinyal: {cleanSym}</span>
-          </h3>
-          <Link
-            href="/evaluation"
-            className="text-xs font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1"
-          >
-            <span>Buka Audit Studio</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-        <p className="text-xs text-slate-400 font-sans leading-relaxed">
-          Belum ada rekaman sinyal kuantitatif yang selesai dievaluasi untuk emiten {cleanSym} pada jendela audit saat ini. Sinyal baru yang terpicu dari Screener akan otomatis dicatat ke sistem audit secara forward-test.
-        </p>
-      </div>
-    );
-  }
-
-  const {
-    total_signals,
-    evaluated_count,
-    win_count,
-    loss_count,
-    pending_count,
-    win_rate_pct,
-    avg_win_pct,
-    avg_loss_pct,
-    profit_factor,
-    net_total_pnl_pct,
-    strategies = {},
-    records = []
-  } = data;
-
   useEffect(() => {
     setCurrentPage(1);
   }, [cleanSym, strategyFilter, statusFilter, pageSize]);
 
+  const records: any[] = data?.records || [];
+
   const filteredRecords = useMemo(() => {
-    return (records || []).filter((r: any) => {
+    return records.filter((r: any) => {
       if (strategyFilter !== "ALL") {
         if (strategyFilter === "BUY_LAYAK") {
           if (!["BUY_LAYAK", "HYBRID_QUANT"].includes(r.strategy_type)) return false;
@@ -154,6 +105,56 @@ export default function StockAuditSummaryCard({ symbol }: StockAuditSummaryCardP
     }
     return rangeWithDots;
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-3 animate-pulse">
+        <div className="h-5 w-48 bg-slate-800 rounded" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-16 bg-slate-900 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || data.total_signals === 0) {
+    return (
+      <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-amber-400" />
+            <span>Rangkuman Rekam Jejak &amp; Win Rate Sinyal: {cleanSym}</span>
+          </h3>
+          <Link
+            href="/evaluation"
+            className="text-xs font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1"
+          >
+            <span>Buka Audit Studio</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <p className="text-xs text-slate-400 font-sans leading-relaxed">
+          Belum ada rekaman sinyal kuantitatif yang selesai dievaluasi untuk emiten {cleanSym} pada jendela audit saat ini. Sinyal baru yang terpicu dari Screener akan otomatis dicatat ke sistem audit secara forward-test.
+        </p>
+      </div>
+    );
+  }
+
+  const {
+    total_signals = 0,
+    evaluated_count = 0,
+    win_count = 0,
+    loss_count = 0,
+    pending_count = 0,
+    win_rate_pct = 0,
+    avg_win_pct = 0,
+    avg_loss_pct = 0,
+    profit_factor = 0,
+    net_total_pnl_pct = 0,
+    strategies = {},
+  } = data;
 
   const winRateColor =
     win_rate_pct >= 70

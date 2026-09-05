@@ -11,10 +11,16 @@ import {
   StockRankingItem,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+export function getApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined") {
+    return "/api/v1";
+  }
+  return "http://127.0.0.1:8000/api/v1";
+}
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;
+  const url = `${getApiBase()}${endpoint}`;
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -32,6 +38,22 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 }
 
 export const api = {
+  async getTickerTape(): Promise<any> {
+    return fetchJson("/stocks/ticker-tape");
+  },
+
+  async getStockSentiment(symbol: string): Promise<any> {
+    const clean = symbol.replace(".JK", "");
+    return fetchJson(`/sentiment/stock/${clean}`);
+  },
+
+  async getIHSGForecast(forceRefresh = false): Promise<any> {
+    return fetchJson(`/screener/ihsg-forecast?force_refresh=${forceRefresh}`);
+  },
+
+  async getTimeframes(): Promise<any> {
+    return fetchJson("/screener/timeframes");
+  },
   // Danger Shield (Anti-FCA / Suspensi / ARB)
   async getDangerShieldRadar(filterType = "ALL", limit = 50): Promise<any> {
     return fetchJson(`/shield/radar?filter_type=${filterType}&limit=${limit}`);

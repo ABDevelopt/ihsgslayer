@@ -35,8 +35,7 @@ export default function TimeframeCategorizerPage() {
   const fetchTimeframes = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/screener/timeframes");
-      const json = await res.json();
+      const json = await api.getTimeframes();
       setData(json);
 
       const cats = await api.getCategoriesSummary();
