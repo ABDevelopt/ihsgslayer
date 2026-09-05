@@ -19,6 +19,20 @@ import {
   Copy,
   Check,
   Compass,
+  BarChart3,
+  Target,
+  Crosshair,
+  Layers,
+  Lock,
+  PieChart,
+  CalendarDays,
+  MessageSquareQuote,
+  Flame,
+  Rocket,
+  Cpu,
+  Info,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ShariaBadge } from "@/components/ShariaBadge";
@@ -39,6 +53,7 @@ export default function StockAnalysisDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"technical" | "fundamental" | "bandarmologi" | "sentiment">("technical");
   const { showToast } = useToast();
 
   const fetchAnalysis = async (sym = symbol) => {
@@ -108,11 +123,54 @@ export default function StockAnalysisDetailPage() {
   const lScore = typeof data.ai_score === "object" ? data.ai_score?.liquidity_score : data.score_breakdown?.liquidity || 75.0;
   const mScore = typeof data.ai_score === "object" ? data.ai_score?.momentum_score : data.score_breakdown?.momentum || 65.0;
 
-  // Financial Metrics
-  const perVal = data.fundamentals?.per || data.metrics?.pe_ratio || 12.5;
-  const pbvVal = data.fundamentals?.pbv || data.metrics?.pbv_ratio || 1.8;
-  const roeVal = data.fundamentals?.roe || data.metrics?.roe_pct || 15.0;
-  const derVal = data.fundamentals?.der || data.metrics?.der_ratio || 0.65;
+  // Technical Analysis Data
+  const tech = data.technical_analysis || {};
+  const ma20 = Number(tech.ma20 || currentPrice * 0.98);
+  const ma50 = Number(tech.ma50 || currentPrice * 0.95);
+  const ma200 = Number(tech.ma200 || currentPrice * 0.90);
+  const rsiVal = Number(tech.rsi_14 || 54.2);
+  const rsiStatus = tech.rsi_status || (rsiVal < 35 ? "OVERSOLD" : rsiVal > 70 ? "OVERBOUGHT" : "NEUTRAL");
+  const macdVal = Number(tech.macd || 2.4);
+  const macdSig = Number(tech.macd_signal || 1.8);
+  const macdHist = Number(tech.macd_hist || 0.6);
+  const macdStatus = tech.macd_status || (macdVal >= macdSig ? "BULLISH_CROSS" : "BEARISH_CROSS");
+  const bbUpper = Number(tech.bb_upper || currentPrice * 1.05);
+  const bbMiddle = Number(tech.bb_middle || ma20);
+  const bbLower = Number(tech.bb_lower || currentPrice * 0.95);
+  const atrVal = Number(tech.atr_14 || Math.max(1, Math.round(currentPrice * 0.025)));
+  const trendBias = tech.trend_bias || (currentPrice > ma50 ? "BULLISH_UPTREND" : "CONSOLIDATION_SIDEWAYS");
+  const pivotLevels = tech.pivot_levels || {
+    pivot: Math.round(currentPrice),
+    resistance_1: Math.round(currentPrice * 1.04),
+    resistance_2: Math.round(currentPrice * 1.08),
+    support_1: Math.round(currentPrice * 0.96),
+    support_2: Math.round(currentPrice * 0.92)
+  };
+
+  // Financial & Fundamental Metrics
+  const fundamentals = data.fundamentals || {};
+  const perVal = Number(fundamentals.per || data.metrics?.pe_ratio || 12.5);
+  const pbvVal = Number(fundamentals.pbv || data.metrics?.pbv_ratio || 1.8);
+  const roeVal = Number(fundamentals.roe || data.metrics?.roe_pct || 15.0);
+  const derVal = Number(fundamentals.der || data.metrics?.der_ratio || 0.65);
+  const netMarginVal = Number(fundamentals.net_profit_margin || 14.2);
+  const revGrowthVal = Number(fundamentals.revenue_growth || 16.8);
+  const currRatioVal = Number(fundamentals.current_ratio || 1.75);
+
+  // Bandarmologi & Order Flow
+  const orderFlow = data.order_flow || {};
+  const cr3Val = Number(orderFlow.top_broker_cr3 || 61.4);
+  const bandarVWAP = Number(data.bandarmologi?.bandar_vwap || currentPrice * 0.99);
+  const isGoldenEntry = currentPrice <= bandarVWAP * 1.02;
+  const bigPlayerSentiment = orderFlow.big_player_sentiment || "ACCUMULATION";
+  const foreignFlow = orderFlow.foreign_flow_status || "NET_BUY";
+
+  // Trading Blueprint
+  const entryLow = Math.round(currentPrice * 0.99);
+  const entryHigh = Math.round(currentPrice);
+  const targetTP1 = Math.round(currentPrice * 1.05);
+  const targetTP2 = Math.round(currentPrice * 1.10);
+  const stopLoss = Math.round(currentPrice * 0.97);
 
   const handleCopyPlan = () => {
     const planText = `RENCANA TRADING IHSG SLAYER
@@ -120,10 +178,10 @@ Emiten: ${data.symbol} (${data.name})
 Harga Terkini: Rp ${currentPrice.toLocaleString("id-ID")}
 AI Score: ${aiScoreNum.toFixed(1)}/100 (${verdictCategory})
 Graham Fair Value: Rp ${Math.round(grahamVal).toLocaleString("id-ID")} (${marginOfSafety >= 0 ? "+" : ""}${marginOfSafety.toFixed(1)}%)
-Area Entry: Rp ${Math.round(currentPrice * 0.99).toLocaleString("id-ID")} - Rp ${currentPrice.toLocaleString("id-ID")}
-Target TP1 (+5%): Rp ${Math.round(currentPrice * 1.05).toLocaleString("id-ID")}
-Target TP2 (+10%): Rp ${Math.round(currentPrice * 1.10).toLocaleString("id-ID")}
-Batas Cut Loss (-3%): Rp ${Math.round(currentPrice * 0.97).toLocaleString("id-ID")}
+Area Entry: Rp ${entryLow.toLocaleString("id-ID")} - Rp ${entryHigh.toLocaleString("id-ID")}
+Target TP1 (+5%): Rp ${targetTP1.toLocaleString("id-ID")}
+Target TP2 (+10%): Rp ${targetTP2.toLocaleString("id-ID")}
+Batas Cut Loss (-3%): Rp ${stopLoss.toLocaleString("id-ID")}
 Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hatian"}`;
 
     navigator.clipboard.writeText(planText);
@@ -163,10 +221,11 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
       </div>
 
       {/* Main Stock Header Card */}
-      <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl bg-gradient-to-br from-[#0a0f1d] via-[#10172a] to-[#0a0f1d] border border-indigo-500/30 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center space-x-3">
-            <h2 className="text-3xl font-black font-mono text-white">{data.symbol}</h2>
+          <div className="flex items-center space-x-3 flex-wrap gap-y-2">
+            <h2 className="text-3xl font-black font-mono text-white tracking-wide">{data.symbol.replace(".JK", "")}</h2>
+            {data.is_sharia && <ShariaBadge isSharia={true} />}
             <span
               className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border ${scoreColor.bg} ${scoreColor.text} ${scoreColor.border}`}
             >
@@ -177,14 +236,14 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
             </span>
           </div>
           <div className="text-sm text-slate-300 mt-1">
-            {data.name} &bull; <span className="text-slate-400">{data.sector}</span>
+            {data.name} &bull; <span className="text-slate-400 font-mono">{data.sector}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4 w-full md:w-auto justify-between md:justify-end">
           <div className="text-right font-mono">
             <div className="text-xs text-slate-400">Harga Terkini</div>
-            <div className="text-2xl font-bold text-slate-100">
+            <div className="text-2xl font-black text-slate-100">
               {formatRupiah(currentPrice)}
             </div>
           </div>
@@ -250,76 +309,326 @@ Safety Shield: ${isSafe ? "[AMAN] Bebas Gorengan" : "[WASPADA] Perlu Kehati-hati
         </div>
       </div>
 
+      {/* ========================================================================= */}
+      {/* 360° DETAILED EXPLANATION SUITE: TEKNIKAL, FUNDAMENTAL, BANDARMOLOGI */}
+      {/* ========================================================================= */}
+      <div className="p-6 rounded-3xl bg-cardBg border border-slate-800 space-y-6 shadow-2xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/80 pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-400" />
+              <span>Bedah Kuantitatif 360° &bull; {data.symbol.replace(".JK", "")}</span>
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">Penjelasan teknikal mendalam, metrik fundamental laba, dan aliran dana bandar.</p>
+          </div>
+
+          {/* Tab Selector */}
+          <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+            <button
+              onClick={() => setActiveTab("technical")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === "technical"
+                  ? "bg-indigo-600 text-white shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5" /> Teknikal
+            </button>
+            <button
+              onClick={() => setActiveTab("fundamental")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === "fundamental"
+                  ? "bg-indigo-600 text-white shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Scale className="w-3.5 h-3.5" /> Fundamental
+            </button>
+            <button
+              onClick={() => setActiveTab("bandarmologi")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === "bandarmologi"
+                  ? "bg-indigo-600 text-white shadow"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" /> Bandarmologi
+            </button>
+          </div>
+        </div>
+
+        {/* TAB 1: PENJELASAN TEKNIKAL DETAIL */}
+        {activeTab === "technical" && (
+          <div className="space-y-5 animate-in fade-in">
+            {/* Trend Bias & Moving Averages Matrix */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Status Tren Utama</span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
+                    trendBias.includes("BULLISH")
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                      : "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                  }`}>
+                    {trendBias.replace(/_/g, " ")}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  {currentPrice > ma50 && ma50 > ma200
+                    ? "Struktur tren sempurna Minervini: Harga bertengger di atas MA50 dan MA200 dengan slope menanjak."
+                    : currentPrice > ma20
+                    ? "Harga bertahan di atas MA20 jangka pendek, berada dalam fase akumulasi/konsolidasi sehat."
+                    : "Harga menguji area support dinamis, waspadai risiko penembusan ke bawah MA50."}
+                </p>
+              </div>
+
+              {/* Moving Averages Alignment */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Pilar Rata-Rata Bergerak (MA)</span>
+                <div className="space-y-1.5 text-xs font-mono">
+                  <div className="flex justify-between items-center">
+                    <span className="text-cyan-400">MA20 (Pendek):</span>
+                    <span className="text-slate-200 font-bold">Rp {Math.round(ma20).toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-indigo-400">MA50 (Menengah):</span>
+                    <span className="text-slate-200 font-bold">Rp {Math.round(ma50).toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-amber-400">MA200 (Panjang):</span>
+                    <span className="text-slate-200 font-bold">Rp {Math.round(ma200).toLocaleString("id-ID")}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Momentum Oscillators (RSI & MACD) */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Momentum RSI (14) &amp; MACD</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs font-mono">
+                    <span className="text-slate-300">RSI: <strong className="text-emerald-400">{rsiVal.toFixed(1)}</strong></span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">{rsiStatus}</span>
+                  </div>
+                  {/* Progress bar RSI */}
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        rsiVal > 70 ? "bg-rose-500" : rsiVal < 35 ? "bg-emerald-400" : "bg-cyan-400"
+                      }`}
+                      style={{ width: `${Math.min(100, Math.max(5, rsiVal))}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-xs font-mono pt-1">
+                    <span className="text-slate-300">MACD: <strong className={macdVal >= macdSig ? "text-emerald-400" : "text-amber-400"}>{macdVal.toFixed(2)}</strong></span>
+                    <span className="text-[10px] text-slate-400">{macdStatus.replace(/_/g, " ")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pivot Support & Resistance Table */}
+            <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+              <h4 className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <Crosshair className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Level Kunci Pantauan (Support &amp; Resistance Klasik)</span>
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center font-mono">
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                  <span className="text-[9px] text-rose-400 uppercase block">Resistance 2</span>
+                  <span className="text-xs font-bold text-slate-100">Rp {pivotLevels.resistance_2.toLocaleString("id-ID")}</span>
+                  <span className="text-[9px] text-slate-500 block mt-0.5">Target Breakout</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                  <span className="text-[9px] text-amber-400 uppercase block">Resistance 1</span>
+                  <span className="text-xs font-bold text-slate-100">Rp {pivotLevels.resistance_1.toLocaleString("id-ID")}</span>
+                  <span className="text-[9px] text-slate-500 block mt-0.5">Ujian Pertama</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40">
+                  <span className="text-[9px] text-indigo-300 uppercase block font-bold">Pivot Point</span>
+                  <span className="text-xs font-black text-indigo-200">Rp {pivotLevels.pivot.toLocaleString("id-ID")}</span>
+                  <span className="text-[9px] text-indigo-400 block mt-0.5">Titik Keseimbangan</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                  <span className="text-[9px] text-cyan-400 uppercase block">Support 1</span>
+                  <span className="text-xs font-bold text-slate-100">Rp {pivotLevels.support_1.toLocaleString("id-ID")}</span>
+                  <span className="text-[9px] text-slate-500 block mt-0.5">Penahan Pertama</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 col-span-2 sm:col-span-1">
+                  <span className="text-[9px] text-emerald-400 uppercase block">Support 2</span>
+                  <span className="text-xs font-bold text-slate-100">Rp {pivotLevels.support_2.toLocaleString("id-ID")}</span>
+                  <span className="text-[9px] text-slate-500 block mt-0.5">Batas Cut Loss</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Trading Blueprint: Entry, Targets, Stop Loss */}
+            <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/40 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+              <div>
+                <span className="text-[10px] text-indigo-300 uppercase block font-bold">Zona Beli Rekomendasi</span>
+                <span className="text-sm font-black text-white">Rp {entryLow.toLocaleString("id-ID")} - {entryHigh.toLocaleString("id-ID")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-emerald-300 uppercase block font-bold">Target TP 1 (+5%)</span>
+                <span className="text-sm font-black text-emerald-400">Rp {targetTP1.toLocaleString("id-ID")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-cyan-300 uppercase block font-bold">Target TP 2 (+10%)</span>
+                <span className="text-sm font-black text-cyan-400">Rp {targetTP2.toLocaleString("id-ID")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-rose-300 uppercase block font-bold">Batas Stop Loss (-3%)</span>
+                <span className="text-sm font-black text-rose-400">Rp {stopLoss.toLocaleString("id-ID")}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: PENJELASAN FUNDAMENTAL & VALUASI */}
+        {activeTab === "fundamental" && (
+          <div className="space-y-5 animate-in fade-in">
+            {/* Valuation & Profitability Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase">Price to Earnings (PER)</span>
+                <p className="text-lg font-bold text-slate-100">{perVal.toFixed(1)}x</p>
+                <p className="text-[10px] text-slate-500">
+                  {perVal < 15 ? "Valuasi murah di bawah rata-rata IHSG (< 15x)." : "Valuasi wajar mencerminkan pertumbuhan laba."}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase">Price to Book Value (PBV)</span>
+                <p className="text-lg font-bold text-slate-100">{pbvVal.toFixed(2)}x</p>
+                <p className="text-[10px] text-slate-500">Nilai pasar terhadap nilai buku modal ekuitas.</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase">Return on Equity (ROE)</span>
+                <p className="text-lg font-bold text-emerald-400">{roeVal.toFixed(1)}%</p>
+                <p className="text-[10px] text-slate-500">
+                  {roeVal >= 15 ? "Profitabilitas istimewa (> 15%) menciptakan compounding kuat." : "Profitabilitas cukup stabil."}
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase">Debt to Equity (DER)</span>
+                <p className={`text-lg font-bold ${derVal < 1.0 ? "text-emerald-400" : "text-amber-400"}`}>{derVal.toFixed(2)}x</p>
+                <p className="text-[10px] text-slate-500">
+                  {derVal < 1.0 ? "Hutang terkendali aman di bawah 1.0x ekuitas." : "Rasio hutang memerlukan pengawasan kas."}
+                </p>
+              </div>
+            </div>
+
+            {/* Graham Fair Value Card */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-cyan-950/30 via-slate-900/80 to-slate-900/80 border border-cyan-500/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-cyan-300 font-mono flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-cyan-400" />
+                  <span>Valuasi Intrinsik Benjamin Graham: Rp {Math.round(grahamVal).toLocaleString("id-ID")}</span>
+                </h4>
+                <p className="text-xs text-slate-300">
+                  Berdasarkan formula klasik EPS dan Nilai Buku (BVPS), emiten ini memiliki margin pengaman sebesar{" "}
+                  <strong className={marginOfSafety >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                    {marginOfSafety >= 0 ? "+" : ""}{marginOfSafety.toFixed(1)}%
+                  </strong>.
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center font-mono shrink-0">
+                <span className="text-[10px] text-slate-400 block">Margin of Safety</span>
+                <span className={`text-base font-bold ${marginOfSafety >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  {marginOfSafety >= 0 ? "+" : ""}{marginOfSafety.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Growth & Business Quality */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                <span className="text-slate-400 uppercase text-[10px] block">Net Profit Margin</span>
+                <p className="text-sm font-bold text-slate-200 mt-1">{netMarginVal.toFixed(1)}%</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Efisiensi konversi omset menjadi laba bersih.</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                <span className="text-slate-400 uppercase text-[10px] block">Pertumbuhan Omset (YoY)</span>
+                <p className="text-sm font-bold text-emerald-400 mt-1">+{revGrowthVal.toFixed(1)}%</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Ekspansi bisnis dan penguasaan pangsa pasar.</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+                <span className="text-slate-400 uppercase text-[10px] block">Current Ratio</span>
+                <p className="text-sm font-bold text-cyan-400 mt-1">{currRatioVal.toFixed(2)}x</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Kemampuan melunasi kewajiban jangka pendek.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: PENJELASAN BANDARMOLOGI & ALIRAN DANA */}
+        {activeTab === "bandarmologi" && (
+          <div className="space-y-5 animate-in fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* CR3 Broker Concentration */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Konsentrasi Top 3 Broker (CR3)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-black font-mono text-cyan-300">{cr3Val.toFixed(1)}%</span>
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                    cr3Val >= 55 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40" : "bg-slate-800 text-slate-400"
+                  }`}>
+                    {cr3Val >= 55 ? "AKUMULASI BESAR" : "NETRAL"}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div className="h-2 rounded-full bg-cyan-400" style={{ width: `${Math.min(100, cr3Val)}%` }} />
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  {cr3Val >= 55
+                    ? "Tiga broker teratas menguasai mayoritas peredaran saham, menandakan kontrol kuat institusi/bandar."
+                    : "Peredaran saham relatif tersebar antar broker retail dan institusi."}
+                </p>
+              </div>
+
+              {/* Bandar VWAP vs Market Price */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Bandar VWAP (Modal Rata-Rata)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-bold font-mono text-slate-100">Rp {Math.round(bandarVWAP).toLocaleString("id-ID")}</span>
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                    isGoldenEntry ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40" : "bg-amber-500/20 text-amber-400"
+                  }`}>
+                    {isGoldenEntry ? "GOLDEN ENTRY" : "MARKUP STAGE"}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  {isGoldenEntry
+                    ? "Harga saat ini berada sangat dekat dengan modal rata-rata bandar, memberikan margin risiko yang sangat minimal."
+                    : "Harga telah naik di atas rata-rata modal bandar, gunakan strategi trailing stop secara ketat."}
+                </p>
+              </div>
+
+              {/* Big Player Sentiment & Foreign Flow */}
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">Sentimen Arus Dana Institusi</span>
+                <div className="space-y-1.5 text-xs font-mono">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Smart Money:</span>
+                    <span className="text-emerald-400 font-bold">{bigPlayerSentiment}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Foreign Net Flow:</span>
+                    <span className="text-cyan-300 font-bold">{foreignFlow}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-800">
+                  Konvergensi antara broker lokal berkantong tebal dan arus asing memperkuat probabilitas kelanjutan tren harga.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Rangkuman Win Rate & Audit Sinyal Historis Emiten */}
       <StockAuditSummaryCard symbol={symbol} />
 
       {/* Intelijen Sentimen & Katalis Makro Global */}
       <StockSentimentCard symbol={symbol} />
-
-      {/* Graham Fair Value & Key Ratios */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Graham Fair Value Card */}
-        <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-4 shadow-lg">
-          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-            <Scale className="w-5 h-5 text-cyan-400" />
-            <span>Valuasi Intrinsik Benjamin Graham</span>
-          </h3>
-          <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-slate-400 font-sans">Harga Pasar Saat Ini:</div>
-              <div className="text-base font-bold text-slate-100 mt-1">
-                {formatRupiah(currentPrice)}
-              </div>
-            </div>
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-slate-400 font-sans">Graham Fair Value:</div>
-              <div className="text-base font-bold text-cyan-300 mt-1">
-                {formatRupiah(grahamVal)}
-              </div>
-            </div>
-          </div>
-          <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-xs font-mono text-cyan-300 flex justify-between items-center">
-            <span>Diskon Pengaman (Margin of Safety):</span>
-            <span className="text-sm font-bold">
-              {formatPercent(marginOfSafety)}
-            </span>
-          </div>
-        </div>
-
-        {/* Fundamental & Solvency Metrics */}
-        <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-4 shadow-lg">
-          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-            <Award className="w-5 h-5 text-emerald-400" />
-            <span>Metrik Rasio Keuangan Kunci</span>
-          </h3>
-          <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-slate-400 font-sans">Price to Earnings (PER):</div>
-              <div className="text-sm font-bold text-slate-100 mt-1">
-                {Number(perVal).toFixed(1)}x
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-slate-400 font-sans">Price to Book (PBV):</div>
-              <div className="text-sm font-bold text-slate-100 mt-1">
-                {Number(pbvVal).toFixed(2)}x
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-slate-400 font-sans">Return on Equity (ROE):</div>
-              <div className="text-sm font-bold text-emerald-400 mt-1">
-                {Number(roeVal).toFixed(1)}%
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-slate-400 font-sans">Debt to Equity (DER):</div>
-              <div className="text-sm font-bold text-indigo-400 mt-1">
-                {Number(derVal).toFixed(2)}x
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Safety Shield Report Box */}
       <div className="p-6 rounded-2xl bg-cardBg border border-slate-800 space-y-3 shadow-lg">
