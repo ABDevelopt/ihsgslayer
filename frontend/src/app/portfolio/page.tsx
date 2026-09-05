@@ -56,7 +56,16 @@ import {
   Award,
   ArrowDownCircle,
   ArrowUpCircle,
-  Receipt
+  Receipt,
+  RotateCcw,
+  Scan,
+  ChevronDown,
+  PackageOpen,
+  Cpu,
+  Crosshair,
+  Star,
+  GanttChartSquare,
+  ArrowRight
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ShariaBadge } from "@/components/ShariaBadge";
@@ -141,11 +150,17 @@ export default function PortfolioPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [viewTab, setViewTab] = useState<"dashboard" | "holdings" | "history" | "cashflows">("dashboard");
+  const [viewTab, setViewTab] = useState<"dashboard" | "holdings" | "history" | "cashflows" | "screener">("dashboard");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [recFilter, setRecFilter] = useState<string>("ALL");
   const [sectorFilter, setSectorFilter] = useState<string>("ALL");
   const [pieMode, setPieMode] = useState<"asset" | "stock">("stock");
+
+  // Screener Integration state
+  const [screenerTab, setScreenerTab] = useState<"confluence" | "bpjs" | "bsjp" | "pre_ara" | "smart_pick" | "multibagger" | "buy_signals">("confluence");
+  const [screenerData, setScreenerData] = useState<Record<string, any>>({});
+  const [screenerLoading, setScreenerLoading] = useState<boolean>(false);
+  const [screenerLoaded, setScreenerLoaded] = useState<Record<string, boolean>>({});
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState<boolean>(false);
@@ -202,6 +217,30 @@ export default function PortfolioPage() {
     }
   };
 
+  // Fetch a single screener's data
+  const fetchScreener = async (tab: string, forceRefresh = false) => {
+    if (screenerLoaded[tab] && !forceRefresh) return;
+    setScreenerLoading(true);
+    try {
+      let res: any = null;
+      if (tab === "confluence") res = await api.getMultiScreenerConfluence(2, 55);
+      else if (tab === "bpjs") res = await api.getBPJSCandidates(60);
+      else if (tab === "bsjp") res = await api.getBSJPCandidates(50);
+      else if (tab === "pre_ara") res = await api.getPreARACandidates(65);
+      else if (tab === "smart_pick") res = await api.getSmartPickStocks();
+      else if (tab === "multibagger") res = await api.getMultibaggerCandidates(60);
+      else if (tab === "buy_signals") res = await api.getBuySignals(68);
+      if (res) {
+        setScreenerData(prev => ({ ...prev, [tab]: res }));
+        setScreenerLoaded(prev => ({ ...prev, [tab]: true }));
+      }
+    } catch (err: any) {
+      showToast(err.message || `Gagal memuat screener ${tab}`, "error");
+    } finally {
+      setScreenerLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPortfolio();
   }, []);
@@ -215,7 +254,32 @@ export default function PortfolioPage() {
   const equityHistory: any[] = data?.equity_history || [];
   const marketRegime = data?.market_regime || null;
 
-  // Filtered holdings for the list tab
+  // Auto-load screener data when switching to screener tab or switching screener sub-tab
+  useEffect(() => {
+    if (viewTab === "screener") {
+      fetchScreener(screenerTab);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewTab, screenerTab]);
+
+  // Pre-fill Add Holding modal from screener candidate
+  const handleAddFromScreener = (candidate: any) => {
+    const sym = (candidate.symbol || "").replace(".JK", "");
+    const price = candidate.current_price || candidate.price || 0;
+    const tp1 = candidate.target_tp1 || candidate.predicted_tp1_price || Math.round(price * 1.07);
+    const sl = candidate.stop_loss || candidate.predicted_stop_loss_price || Math.round(price * 0.95);
+    const notes = candidate.rationale || candidate.pre_ara_rationale || `Sinyal screener: ${candidate.active_patterns?.join(", ") || ""}`;
+    setFormSymbol(sym);
+    setFormPrice(String(Math.round(price)));
+    setFormTp1(String(Math.round(tp1)));
+    setFormSl(String(Math.round(sl)));
+    setFormNotes(String(notes).slice(0, 100));
+    setFormLot("10");
+    setRiskParityInfo(null);
+    setIsAddOpen(true);
+  };
+
+
   const filteredHoldings = useMemo(() => {
     return holdings.filter((h) => {
       const matchSearch =
@@ -458,9 +522,21 @@ export default function PortfolioPage() {
     }
   };
 
+  // Handle Reset Portfolio (Mulai dari Awal)
+  const handleResetPortfolio = async () => {
+    if (!confirm("Apakah Anda yakin ingin MENGHAPUS SEMUA riwayat portofolio dan mulai dari awal?\n\nSemua posisi aktif, riwayat transaksi tutup, dan mutasi kas akan dikosongkan. Saldo kas akan diatur ulang ke Rp 100.000.000.")) return;
+    try {
+      const res = await api.resetPortfolio();
+      showToast(res.message || "Portofolio berhasil dibersihkan untuk mulai dari awal.", "success");
+      fetchPortfolio(true);
+    } catch (err: any) {
+      showToast(err.message || "Gagal mereset portofolio.", "error");
+    }
+  };
+
   // Handle Reset Demo
   const handleResetDemo = async () => {
-    if (!confirm("Reset portofolio ke acuan trading journal awal?")) return;
+    if (!confirm("Reset portofolio ke acuan demo trading journal?")) return;
     try {
       const res = await api.resetDemoPortfolio();
       showToast(res.message || "Portofolio di-reset ke acuan awal.", "success");
@@ -525,6 +601,16 @@ export default function PortfolioPage() {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-emerald-400" : ""}`} />
             <span>{refreshing ? "Menganalisis..." : "Refresh"}</span>
+          </button>
+
+          <button
+            onClick={handleResetPortfolio}
+            disabled={refreshing || loading}
+            className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-mono flex items-center gap-1.5 transition-all disabled:opacity-50"
+            title="Hapus riwayat dan mulai dari awal (Rp 100.000.000)"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+            <span>Mulai dari Awal</span>
           </button>
 
           <button
@@ -716,6 +802,18 @@ export default function PortfolioPage() {
           >
             <Receipt className="w-4 h-4 text-emerald-400" />
             <span>Mutasi Modal RDN ({cashFlows.length})</span>
+          </button>
+
+          <button
+            onClick={() => setViewTab("screener")}
+            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 transition-all ${
+              viewTab === "screener"
+                ? "bg-violet-500/20 text-violet-300 border border-violet-500/50 shadow-lg shadow-violet-500/10"
+                : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+            }`}
+          >
+            <Scan className="w-4 h-4 text-violet-400" />
+            <span>Screener &amp; Rekomendasi</span>
           </button>
         </div>
 
@@ -1582,6 +1680,223 @@ export default function PortfolioPage() {
           )}
         </div>
       )}
+
+      {/* TAB 5: SCREENER & REKOMENDASI */}
+      {viewTab === "screener" && (() => {
+        const SCREENER_TABS = [
+          { key: "confluence", label: "Konfluensi Multi-Screener", icon: GanttChartSquare, color: "violet" },
+          { key: "multibagger", label: "Calon Multibagger", icon: Star, color: "amber" },
+          { key: "bpjs", label: "BPJS Intraday", icon: Zap, color: "emerald" },
+          { key: "bsjp", label: "BSJP Pre-Closing", icon: Crosshair, color: "cyan" },
+          { key: "pre_ara", label: "Pre-ARA Hunter", icon: TrendingUp, color: "rose" },
+          { key: "smart_pick", label: "Smart Pick Rebound", icon: Cpu, color: "blue" },
+          { key: "buy_signals", label: "Sinyal BUY Institusional", icon: ShieldCheck, color: "emerald" },
+        ] as const;
+
+        const currentData = screenerData[screenerTab];
+        const candidates: any[] = currentData?.candidates || currentData?.signals || [];
+
+        return (
+          <div className="space-y-5">
+            {/* Screener Header */}
+            <div className="p-5 rounded-2xl bg-cardBg border border-violet-500/30 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-violet-500/20 text-violet-300 border border-violet-500/40 flex items-center gap-1.5">
+                      <Scan className="w-3 h-3" />
+                      SCREENER TERPADU
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">7 Strategi Screener · Langsung ke Portofolio</span>
+                  </div>
+                  <h3 className="font-bold text-lg text-slate-100 mt-1 flex items-center gap-2">
+                    <PackageOpen className="w-5 h-5 text-violet-400" />
+                    Screener &amp; Rekomendasi Saham
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono mt-0.5">Pilih screener, cari kandidat terbaik, lalu klik <strong className="text-emerald-400">+ Tambah ke Portofolio</strong> untuk langsung mencatatnya.</p>
+                </div>
+                <button
+                  onClick={() => fetchScreener(screenerTab, true)}
+                  disabled={screenerLoading}
+                  className="px-4 py-2 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-300 text-xs font-mono flex items-center gap-1.5 transition-all disabled:opacity-50 shrink-0"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${screenerLoading ? "animate-spin" : ""}`} />
+                  <span>{screenerLoading ? "Memindai..." : "Refresh Screener"}</span>
+                </button>
+              </div>
+
+              {/* Screener sub-tabs */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {SCREENER_TABS.map(({ key, label, icon: Icon, color }) => (
+                  <button
+                    key={key}
+                    onClick={() => setScreenerTab(key as any)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold flex items-center gap-1.5 transition-all border ${
+                      screenerTab === key
+                        ? `bg-${color}-500/20 text-${color}-300 border-${color}-500/50`
+                        : "bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800"
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${screenerTab === key ? `text-${color}-400` : ""}`} />
+                    {label}
+                    {screenerLoaded[key] && (
+                      <span className="ml-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[9px]">
+                        {(screenerData[key]?.candidates || screenerData[key]?.signals || []).length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Screener content */}
+            {screenerLoading ? (
+              <div className="p-16 text-center text-slate-500 font-mono text-xs flex flex-col items-center gap-3">
+                <RefreshCw className="w-8 h-8 animate-spin text-violet-400" />
+                <p>Memindai semesta saham BEI...</p>
+                <p className="text-[10px] text-slate-600">Proses ini membutuhkan 5-15 detik</p>
+              </div>
+            ) : !screenerLoaded[screenerTab] ? (
+              <div className="p-12 text-center bg-cardBg rounded-2xl border border-slate-800 space-y-3">
+                <Scan className="w-10 h-10 text-slate-600 mx-auto" />
+                <p className="text-sm font-mono text-slate-400">Belum ada data. Klik <strong>Refresh Screener</strong> untuk memulai pemindaian.</p>
+              </div>
+            ) : candidates.length === 0 ? (
+              <div className="p-12 text-center bg-cardBg rounded-2xl border border-slate-800 space-y-3">
+                <Search className="w-10 h-10 text-slate-600 mx-auto" />
+                <p className="text-sm font-mono text-slate-400">Tidak ada kandidat ditemukan untuk kondisi pasar saat ini.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
+                  <span>{candidates.length} kandidat ditemukan</span>
+                  <span className="text-slate-600">Klik "+ Tambah" untuk mencatat ke portofolio</span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {candidates.slice(0, 20).map((c: any, idx: number) => {
+                    const sym = (c.symbol || "").replace(".JK", "");
+                    const price = c.current_price || c.price || 0;
+                    const score = c.multibagger_score || c.confluence_score || c.bpjs_score || c.bsjp_score || c.pre_ara_score || c.ai_score || 0;
+                    const tp1 = c.target_tp1 || c.predicted_tp1_price || 0;
+                    const sl = c.stop_loss || c.predicted_stop_loss_price || 0;
+                    const changePct = c.change_pct || c.morning_gain_pct || 0;
+                    const patterns: string[] = c.active_patterns || c.confluence_screeners || [];
+                    const isSharia = c.is_sharia || false;
+
+                    const scoreColor = score >= 80 ? "emerald" : score >= 65 ? "amber" : "slate";
+
+                    return (
+                      <div key={idx} className="p-4 rounded-2xl bg-cardBg border border-slate-800 hover:border-slate-700 transition-all space-y-3">
+                        {/* Card header */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center font-mono font-bold text-violet-400 text-sm shrink-0">
+                              {sym.slice(0, 4)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-sm font-mono font-bold text-slate-100">{sym}</span>
+                                {isSharia && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">ISSI</span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-400 font-mono truncate max-w-[180px]">{c.name || sym}</p>
+                              <p className="text-[10px] text-slate-600 font-mono">{c.sector || "-"}</p>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-mono font-bold text-slate-100">
+                              {price >= 1000 ? `Rp ${(price/1000).toFixed(1)}K` : `Rp ${price.toLocaleString("id-ID")}`}
+                            </div>
+                            {changePct !== 0 && (
+                              <div className={`text-[11px] font-mono font-bold ${changePct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                {changePct >= 0 ? "+" : ""}{Number(changePct).toFixed(2)}%
+                              </div>
+                            )}
+                            <div className={`mt-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-${scoreColor}-500/20 text-${scoreColor}-300 border border-${scoreColor}-500/30`}>
+                              {Number(score).toFixed(0)} pts
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* TP / SL */}
+                        {(tp1 > 0 || sl > 0) && (
+                          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                            {tp1 > 0 && (
+                              <div className="bg-emerald-950/20 border border-emerald-500/20 rounded px-2 py-1 flex justify-between">
+                                <span className="text-emerald-400">TP1</span>
+                                <span className="text-emerald-300 font-bold">
+                                  Rp {Math.round(tp1).toLocaleString("id-ID")}
+                                  {price > 0 && ` (+${((tp1-price)/price*100).toFixed(1)}%)`}
+                                </span>
+                              </div>
+                            )}
+                            {sl > 0 && (
+                              <div className="bg-rose-950/20 border border-rose-500/20 rounded px-2 py-1 flex justify-between">
+                                <span className="text-rose-400">SL</span>
+                                <span className="text-rose-300 font-bold">
+                                  Rp {Math.round(sl).toLocaleString("id-ID")}
+                                  {price > 0 && ` (${((sl-price)/price*100).toFixed(1)}%)`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Screener tags / patterns */}
+                        {patterns.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {patterns.slice(0, 3).map((p: string, pi: number) => (
+                              <span key={pi} className="text-[9px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 font-mono">
+                                {p.replace(/_/g, " ")}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Rationale */}
+                        {(c.rationale || c.pre_ara_rationale || c.selling_trigger_rule) && (
+                          <p className="text-[10px] text-slate-500 font-mono leading-relaxed line-clamp-2">
+                            {c.rationale || c.pre_ara_rationale || c.selling_trigger_rule}
+                          </p>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-slate-800">
+                          <button
+                            onClick={() => handleAddFromScreener(c)}
+                            className="flex-1 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] font-mono flex items-center justify-center gap-1 transition-all"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5" />
+                            + Tambah ke Portofolio
+                          </button>
+                          <a
+                            href={`/analysis/${sym}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-mono flex items-center gap-1 transition-all"
+                          >
+                            <ArrowRight className="w-3 h-3" />
+                            Analisis
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {candidates.length > 20 && (
+                  <p className="text-center text-[11px] font-mono text-slate-500">
+                    Menampilkan 20 dari {candidates.length} kandidat. Buka halaman Screener untuk melihat semua.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* MODAL: TOP-UP MODAL RDN */}
       {isTopUpOpen && (

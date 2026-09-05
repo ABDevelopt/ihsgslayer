@@ -291,6 +291,13 @@ export const api = {
     });
   },
 
+  async resetPortfolio(initial_capital = 100000000): Promise<any> {
+    return fetchJson("/portfolio/reset", {
+      method: "POST",
+      body: JSON.stringify({ initial_capital }),
+    });
+  },
+
   async resetDemoPortfolio(): Promise<any> {
     return fetchJson("/portfolio/reset-demo", {
       method: "POST",

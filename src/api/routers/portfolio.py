@@ -118,6 +118,17 @@ async def delete_holding(holding_id: str):
     }
 
 
+@router.post("/reset")
+async def reset_clean_portfolio(initial_capital: float = Body(100_000_000.0, embed=True)):
+    """Reset portfolio and transaction history to fresh clean slate."""
+    state = PortfolioAdvisorEngine.reset_clean_portfolio(initial_cash=initial_capital)
+    return {
+        "status": "success",
+        "message": f"Portofolio dan histori transaksi berhasil dibersihkan. Memulai dari awal dengan kas Rp {initial_capital:,.0f}.",
+        "portfolio": state
+    }
+
+
 @router.post("/reset-demo")
 async def reset_demo_portfolio():
     """Reset portfolio to default seed holdings."""

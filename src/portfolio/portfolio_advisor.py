@@ -182,6 +182,33 @@ class PortfolioAdvisorEngine:
         return journal.get("closed_positions", [])
 
     @classmethod
+    def reset_clean_portfolio(cls, initial_cash: float = 100_000_000.0) -> Dict[str, Any]:
+        """Reset portfolio and trading journal to a completely clean slate with 0 positions."""
+        clean_state = {
+            "initial_cash": float(initial_cash),
+            "cash_balance": float(initial_cash),
+            "total_equity": float(initial_cash),
+            "stock_market_value": 0.0,
+            "total_pnl_rp": 0.0,
+            "total_pnl_pct": 0.0,
+            "nav_per_unit": 1000.0,
+            "open_positions": [],
+            "closed_positions": [],
+            "cash_flows": [],
+            "nav_history": [{"date": datetime.now().strftime("%Y-%m-%d"), "nav": 1000.0}]
+        }
+        cls._save_journal(clean_state)
+        data_dir = os.path.dirname(JOURNAL_FILE)
+        for fname in ["portfolio_holdings.json", "portfolio_closed_trades.json"]:
+            fpath = os.path.join(data_dir, fname)
+            try:
+                with open(fpath, "w", encoding="utf-8") as f:
+                    json.dump([], f, indent=2)
+            except Exception:
+                pass
+        return clean_state
+
+    @classmethod
     def seed_default_holdings(cls) -> List[Dict[str, Any]]:
         """Ensure holdings exist in trading journal; return active holdings."""
         holdings = cls.load_holdings()
