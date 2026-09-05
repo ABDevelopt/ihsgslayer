@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Globe,
+  Globe2,
   Newspaper,
   TrendingUp,
   TrendingDown,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1";
+import StrategyHubNav from "@/components/StrategyHubNav";
 
 interface MacroDriver {
   symbol: string;
@@ -146,6 +148,18 @@ export default function SentimentIntelligencePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Macro Intel Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Pusat Intelijen Pasar & Sentimen Makro"
+        hubBadge="MACRO INTEL"
+        badgeVariant="cyan"
+        description="Pusat intelijen makro pasar BEI: Prediksi arah IHSG berbasis indeks global (EIDO, S&P 500, Komoditas) dan analisis sentimen berita media NLP."
+        tabs={[
+          { href: "/ihsg-forecast", label: "Prediksi IHSG Global", icon: Globe2, badge: "EIDO & Komoditas" },
+          { href: "/sentiment", label: "Sentimen Berita & Makro", icon: Newspaper, badge: "NLP Engine" },
+        ]}
+      />
+
       {/* Top Banner */}
       <div className="p-5 rounded-2xl bg-cardBg border border-cyan-500/30 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

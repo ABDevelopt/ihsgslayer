@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Globe2,
+  Newspaper,
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
@@ -20,6 +21,7 @@ import {
   Activity,
 } from "lucide-react";
 import { formatPercent } from "@/lib/utils";
+import StrategyHubNav from "@/components/StrategyHubNav";
 
 export default function IHSGForecastPage() {
   const [forecast, setForecast] = useState<any>(null);
@@ -50,6 +52,18 @@ export default function IHSGForecastPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Macro Intel Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Pusat Intelijen Pasar & Sentimen Makro"
+        hubBadge="MACRO INTEL"
+        badgeVariant="cyan"
+        description="Pusat intelijen makro pasar BEI: Prediksi arah IHSG berbasis indeks global (EIDO, S&P 500, Komoditas) dan analisis sentimen berita media NLP."
+        tabs={[
+          { href: "/ihsg-forecast", label: "Prediksi IHSG Global", icon: Globe2, badge: "EIDO & Komoditas" },
+          { href: "/sentiment", label: "Sentimen Berita & Makro", icon: Newspaper, badge: "NLP Engine" },
+        ]}
+      />
+
       {/* Top Banner */}
       <div className="p-6 rounded-2xl bg-cardBg border border-emerald-500/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
         <div>

@@ -1,18 +1,32 @@
 "use client";
 
+
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  FlaskConical,
+  Info,
+  Play,
+  RefreshCw,
+  ShieldCheck,
+  Target,
+  TrendingUp,
+  Trophy,
+  Zap
+} from "lucide-react";
 import { ShariaBadge } from "@/components/ShariaBadge";
 
 import { useState, useCallback } from "react";
+import StrategyHubNav from "@/components/StrategyHubNav";
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell
 } from "recharts";
-import {
-  BarChart3, Play, TrendingUp, ShieldCheck, RefreshCw,
-  Activity, FlaskConical, ChevronDown, ChevronUp, Info,
-  Trophy, AlertTriangle, Target, Zap, Filter
-} from "lucide-react";
-
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 const PATTERN_OPTIONS = ["AREA_DEMAND","THROWBACK_RETEST","LIQUIDITY_SWEEP","EARLY_BREAKOUT"];
@@ -158,6 +172,18 @@ export default function BacktestStudioPage() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
+      {/* Quant Lab Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Studio Riset & Simulasi Kuantitatif"
+        hubBadge="QUANT LAB"
+        badgeVariant="indigo"
+        description="Pusat pengujian strategi trading: Simulasi historis event-driven (Backtest dengan DSR) dan eksekusi robot forward-testing tanpa risiko modal riil."
+        tabs={[
+          { href: "/backtest", label: "Studio Backtest (Historis)", icon: BarChart3, badge: "DSR & Walk-Forward" },
+          { href: "/forward-test", label: "Studio Forward Test (Live Bot)", icon: Bot, badge: "Virtual Trading" },
+        ]}
+      />
+
 
       {/* HEADER + CONFIG */}
       <div className="p-5 rounded-2xl bg-cardBg border border-indigo-500/40 shadow-xl">

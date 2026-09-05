@@ -54,58 +54,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
   const navSections: NavSection[] = [
     {
-      sectionTitle: "3 Pilar Strategi Trading",
-      items: [
-        {
-          href: "/timeframes",
-          label: "Studio 3 Pilar Trading",
-          icon: Target,
-          chip: "3-Pilar",
-          chipVariant: "emerald",
-        },
-        {
-          href: "/bpjs",
-          label: "BPJS (Scalping Pagi)",
-          icon: Sunrise,
-          chip: "Scalp",
-          chipVariant: "emerald",
-        },
-        {
-          href: "/pre-ara",
-          label: "Pre-ARA Hunter",
-          icon: Rocket,
-          chip: "ARA",
-          chipVariant: "rose",
-        },
-        {
-          href: "/confluence",
-          label: "Konfluensi (Swing)",
-          icon: Layers,
-          chip: "Swing",
-          chipVariant: "amber",
-        },
-        {
-          href: "/bsjp",
-          label: "BSJP (Swing H+1)",
-          icon: Sunset,
-          chip: "H+1",
-          chipVariant: "amber",
-        },
-        {
-          href: "/smartpick",
-          label: "Pola Smart Pick",
-          icon: Zap,
-        },
-        {
-          href: "/multibagger",
-          label: "Calon Multibagger",
-          icon: Flame,
-          chip: "5X Bagger",
-          chipVariant: "emerald",
-        },
-      ],
-    },
-    {
       sectionTitle: "Pasar & Intelijen",
       items: [
         {
@@ -115,34 +63,53 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
         },
         {
           href: "/ihsg-forecast",
-          label: "Prediksi IHSG Global",
+          label: "IHSG & Sentimen Makro",
           icon: Globe2,
-          chip: "EIDO",
+          chip: "EIDO • NLP",
           chipVariant: "emerald",
         },
         {
           href: "/orderflow",
           label: "Bandar & Order-Flow",
           icon: Activity,
-          chip: "LPM",
+          chip: "LPM Flow",
           chipVariant: "indigo",
+        },
+      ],
+    },
+    {
+      sectionTitle: "Screener & Strategi Terpadu",
+      items: [
+        {
+          href: "/bpjs",
+          label: "Scalping Hub (BPJS & Pre-ARA)",
+          icon: Sunrise,
+          chip: "Intraday",
+          chipVariant: "emerald",
+        },
+        {
+          href: "/confluence",
+          label: "Swing Hub (Konfluensi & BSJP)",
+          icon: Layers,
+          chip: "Swing & Pola",
+          chipVariant: "amber",
+        },
+        {
+          href: "/multibagger",
+          label: "Calon Multibagger",
+          icon: Flame,
+          chip: "5X Bagger",
+          chipVariant: "emerald",
         },
         {
           href: "/screener",
           label: "AI Screener (NLP)",
           icon: Filter,
         },
-        {
-          href: "/sentiment",
-          label: "Sentimen & Berita Makro",
-          icon: Newspaper,
-          chip: "NLP",
-          chipVariant: "emerald",
-        },
       ],
     },
     {
-      sectionTitle: "Portofolio & Audit Kuantitatif",
+      sectionTitle: "Portofolio & Riset Kuantitatif",
       items: [
         {
           href: "/portfolio",
@@ -152,25 +119,18 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           chipVariant: "emerald",
         },
         {
+          href: "/backtest",
+          label: "Studio Backtest & Forward Test",
+          icon: BarChart3,
+          chip: "Quant Lab",
+          chipVariant: "indigo",
+        },
+        {
           href: "/evaluation",
           label: "Audit & Evaluasi Riil",
           icon: ShieldCheck,
-          chip: "3-Pilar",
+          chip: "Win Rate",
           chipVariant: "emerald",
-        },
-        {
-          href: "/forward-test",
-          label: "Studio Forward Test",
-          icon: Bot,
-          chip: "Auto-Bot",
-          chipVariant: "emerald",
-        },
-        {
-          href: "/backtest",
-          label: "Studio Backtest",
-          icon: BarChart3,
-          chip: "DSR",
-          chipVariant: "indigo",
         },
         {
           href: "/guide",
@@ -267,7 +227,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                 <div className="space-y-0.5">
                   {sec.items.map((item) => {
                     const Icon = item.icon;
-                    const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== "/" && pathname.startsWith(item.href)) ||
+                      (item.href === "/bpjs" && pathname === "/pre-ara") ||
+                      (item.href === "/confluence" && (pathname === "/bsjp" || pathname === "/smartpick" || pathname === "/timeframes")) ||
+                      (item.href === "/ihsg-forecast" && pathname === "/sentiment") ||
+                      (item.href === "/backtest" && pathname === "/forward-test");
 
                     return (
                       <Link

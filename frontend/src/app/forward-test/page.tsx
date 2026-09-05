@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import {
   Bot,
+  BarChart3,
   Play,
   Pause,
   RefreshCw,
@@ -46,6 +47,7 @@ import {
   FileText,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import StrategyHubNav from "@/components/StrategyHubNav";
 import { ShariaBadge } from "@/components/ShariaBadge";
 import { ForwardTestPortfolio, ForwardPosition, BotLogEntry } from "@/lib/types";
 import { formatRupiah, formatPercent } from "@/lib/utils";
@@ -310,6 +312,18 @@ export default function ForwardTestStudioPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Quant Lab Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Studio Riset & Simulasi Kuantitatif"
+        hubBadge="QUANT LAB"
+        badgeVariant="indigo"
+        description="Pusat pengujian strategi trading: Simulasi historis event-driven (Backtest dengan DSR) dan eksekusi robot forward-testing tanpa risiko modal riil."
+        tabs={[
+          { href: "/backtest", label: "Studio Backtest (Historis)", icon: BarChart3, badge: "DSR & Walk-Forward" },
+          { href: "/forward-test", label: "Studio Forward Test (Live Bot)", icon: Bot, badge: "Virtual Trading" },
+        ]}
+      />
+
       {/* Header Banner */}
       <div className="p-6 rounded-2xl bg-cardBg border border-cyan-500/40 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-xl">
         <div>

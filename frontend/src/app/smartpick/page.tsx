@@ -1,20 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+
 import {
-  Zap,
+  Activity,
   ArrowRight,
-  RefreshCw,
+  Clock,
   Layers,
+  Lock,
+  RefreshCw,
+  ShieldCheck,
+  Sunset,
   Target,
   TrendingUp,
-  ShieldCheck,
-  Clock,
-  Lock,
-  Activity
+  Zap
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
+import StrategyHubNav from "@/components/StrategyHubNav";
 import { ShariaBadge } from "@/components/ShariaBadge";
 import { formatRupiah } from "@/lib/utils";
 
@@ -40,6 +43,19 @@ export default function SmartPickPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Swing Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Pusat Strategi Swing & Pola Chart Multihari"
+        hubBadge="SWING & PATTERNS"
+        badgeVariant="amber"
+        description="Pusat strategi swing multihari BEI: Konfluensi multi-indikator kuantitatif, BSJP (Beli Sore Jual Pagi), dan deteksi pola chart otomatis."
+        tabs={[
+          { href: "/confluence", label: "Konfluensi Multi-Strategi", icon: Layers, badge: "Multi-Pilar" },
+          { href: "/bsjp", label: "BSJP (Beli Sore Jual Pagi)", icon: Sunset, badge: "H+1 Swing" },
+          { href: "/smartpick", label: "Pola Chart Smart Pick", icon: Zap, badge: "VCP & Breakout" },
+        ]}
+      />
+
       {/* Header Banner */}
       <div className="p-6 rounded-2xl bg-cardBg border border-indigo-500/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
         <div>

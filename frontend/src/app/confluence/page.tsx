@@ -1,33 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+
 import {
-  Layers,
-  Sparkles,
-  RefreshCw,
-  Search,
-  Filter,
-  CheckCircle2,
-  ArrowRight,
-  TrendingUp,
-  Target,
-  ShieldCheck,
   Activity,
-  Flame,
-  LayoutGrid,
-  List,
+  AlertTriangle,
+  ArrowRight,
+  BarChart2,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Clock,
-  Lock,
-  BarChart2,
-  PieChart,
-  Sliders,
   DollarSign,
-  AlertTriangle
+  Filter,
+  Flame,
+  Layers,
+  LayoutGrid,
+  List,
+  Lock,
+  PieChart,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Sliders,
+  Sparkles,
+  Sunset,
+  Target,
+  TrendingUp,
+  Zap
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
+import StrategyHubNav from "@/components/StrategyHubNav";
 import { ShariaBadge } from "@/components/ShariaBadge";
 import { ConfluenceCandidate, ConfluenceResponse } from "@/lib/types";
 import { formatRupiah, formatPercent } from "@/lib/utils";
@@ -128,6 +132,19 @@ export default function ScreenerConfluencePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Swing Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Pusat Strategi Swing & Pola Chart Multihari"
+        hubBadge="SWING & PATTERNS"
+        badgeVariant="amber"
+        description="Pusat strategi swing multihari BEI: Konfluensi multi-indikator kuantitatif, BSJP (Beli Sore Jual Pagi), dan deteksi pola chart otomatis."
+        tabs={[
+          { href: "/confluence", label: "Konfluensi Multi-Strategi", icon: Layers, badge: "Multi-Pilar" },
+          { href: "/bsjp", label: "BSJP (Beli Sore Jual Pagi)", icon: Sunset, badge: "H+1 Swing" },
+          { href: "/smartpick", label: "Pola Chart Smart Pick", icon: Zap, badge: "VCP & Breakout" },
+        ]}
+      />
+
       {/* Header Banner */}
       <div className="p-6 rounded-2xl bg-cardBg border border-amber-500/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
         <div>

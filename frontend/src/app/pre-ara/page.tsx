@@ -1,24 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+
 import {
-  Rocket,
-  ShieldCheck,
-  RefreshCw,
-  Zap,
+  Activity,
+  AlertCircle,
   ArrowRight,
   ArrowUpRight,
+  ChevronRight,
   Clock,
+  Lock,
+  Percent,
+  RefreshCw,
+  Rocket,
+  ShieldCheck,
+  Sunrise,
   Target,
   TrendingUp,
-  Activity,
-  Percent,
-  Lock,
-  ChevronRight,
-  AlertCircle
+  Zap
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
+import StrategyHubNav from "@/components/StrategyHubNav";
 import { ShariaBadge } from "@/components/ShariaBadge";
 import { PreARACandidate } from "@/lib/types";
 import { formatRupiah } from "@/lib/utils";
@@ -62,6 +65,18 @@ export default function PreARAPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Scalping Hub Navigation */}
+      <StrategyHubNav
+        hubTitle="Pusat Strategi Scalping & Intraday Momentum"
+        hubBadge="INTRADAY SCALPING"
+        badgeVariant="emerald"
+        description="Pusat strategi scalping cepat BEI: BPJS (Beli Pagi Jual Sore) dengan proteksi kempis dan Pre-ARA Hunter penembus batas atas bursa."
+        tabs={[
+          { href: "/bpjs", label: "BPJS Scanner (Beli Pagi Jual Sore)", icon: Sunrise, badge: "Win Rate 90.6%" },
+          { href: "/pre-ara", label: "Pre-ARA Hunter (Pemburu ARA)", icon: Rocket, badge: "Ceiling ARA" },
+        ]}
+      />
+
       {/* Header Banner */}
       <div className="p-6 rounded-2xl bg-cardBg border border-rose-500/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
         <div>
